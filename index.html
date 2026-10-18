@@ -41,11 +41,19 @@
             justify-content: space-between;
             align-items: center;
             margin-bottom: 15px;
+            flex-wrap: wrap;
+            gap: 10px;
         }
         .header-right {
             display: flex;
             align-items: center;
             gap: 10px;
+        }
+        .header-left {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            flex-wrap: wrap;
         }
         .menu-btn {
             font-size: 22px;
@@ -471,7 +479,12 @@
                         </div>
                     </div>
                 </div>
-                <button onclick="logout()" class="btn-danger">خروج</button>
+                <div class="header-left">
+                    <button onclick="exportAppData()" class="btn-excel" style="font-size: 11px; padding: 6px 10px;">💾 حفظ نسخة (JSON)</button>
+                    <button onclick="document.getElementById('importFile').click()" style="background-color: var(--primary); font-size: 11px; padding: 6px 10px;">📂 استرجاع البيانات</button>
+                    <input type="file" id="importFile" accept=".json" onchange="importAppData(event)" style="display: none;">
+                    <button onclick="logout()" class="btn-danger" style="font-size: 11px; padding: 6px 10px;">خروج</button>
+                </div>
             </header>
 
             <!-- مراكزي التجارية -->
@@ -751,6 +764,50 @@
         let currentUser = null;
         let activeModalContractId = null;
         let timerInterval = null;
+
+        function exportAppData() {
+            const data = {
+                users: users,
+                centers: centersList,
+                rentals: rentals
+            };
+            const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `yesur_backup_${new Date().toISOString().slice(0, 10)}.json`;
+            a.click();
+            URL.revokeObjectURL(url);
+        }
+
+        function importAppData(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                try {
+                    const data = JSON.parse(e.target.result);
+                    if (data.users && data.centers && data.rentals) {
+                        users = data.users;
+                        centersList = data.centers;
+                        rentals = data.rentals;
+
+                        localStorage.setItem('yesur_users', JSON.stringify(users));
+                        localStorage.setItem('yesur_centers', JSON.stringify(centersList));
+                        localStorage.setItem('yesur_rentals', JSON.stringify(rentals));
+
+                        alert('تم استرجاع البيانات بنجاح!');
+                        location.reload();
+                    } else {
+                        alert('ملف النسخة الاحتياطية غير صالح أو تالف.');
+                    }
+                } catch (err) {
+                    alert('حدث خطأ أثناء قراءة الملف.');
+                }
+            };
+            reader.readAsText(file);
+        }
 
         function parseArabicNumbers(str) {
             if (!str) return '';
