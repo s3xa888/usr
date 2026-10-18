@@ -274,13 +274,13 @@
                     <div class="brand-logo">
                         <div class="logo-icon">ي</div>
                         <div>
-                            <div class="brand-title">منصة يسرُ</div>
+                            <div class="brand-title">منصة يُسر للمتابعة</div>
                             <span id="userInfo" style="font-size: 11px; color: #64748b; display: block;"></span>
                         </div>
                     </div>
                 </div>
                 <div class="header-left">
-                    <span id="syncStatus" style="font-size: 10px; color: var(--success); font-weight: bold;">● متصل بالسحاب</span>
+                    <span id="syncStatus" style="font-size: 10px; color: var(--success); font-weight: bold;">● متصل اونلاين</span>
                     <button onclick="logout()" class="btn-danger" style="font-size: 11px; padding: 6px 10px;">خروج</button>
                 </div>
             </header>
@@ -374,11 +374,11 @@
                             </div>
                             <div class="form-group">
                                 <label>اسم البراند:</label>
-                                <input type="text" id="brandName" required placeholder="مثال: عنوان القهوة">
+                                <input type="text" id="brandName" required placeholder="مثال: مطابع السروات">
                             </div>
                             <div class="form-group">
                                 <label>اسم المستأجر:</label>
-                                <input type="text" id="ownerName" required placeholder="مثال: عبدالله محمد">
+                                <input type="text" id="ownerName" required placeholder="مثال: هاني">
                             </div>
                             <div class="form-group">
                                 <label>رقم تواصل المستأجر:</label>
@@ -386,11 +386,11 @@
                             </div>
                             <div class="form-group">
                                 <label>مساحة الوحدة (م²):</label>
-                                <input type="text" id="shopArea" required placeholder="مثال: 50">
+                                <input type="text" id="shopArea" required placeholder="مثال: ١٥٠٠">
                             </div>
                             <div class="form-group">
                                 <label>قيمة الإيجار السنوي (ريال):</label>
-                                <input type="text" id="rentAmount" required placeholder="مثال: 60000">
+                                <input type="text" id="rentAmount" required placeholder="مثال: ٢٠٠٠٠٠">
                             </div>
                             <div class="form-group">
                                 <label>تاريخ بداية العقد:</label>
@@ -419,7 +419,7 @@
                                 <div id="manualFieldsContainer"></div>
                             </div>
                         </div>
-                        <button type="submit" style="width: auto; margin-top: 12px;">حفظ العقد وتوليد كافة الدفعات</button>
+                        <button type="submit" style="width: auto; margin-top: 12px;">حفظ العقد في المنصة</button>
                     </form>
                 </div>
 
@@ -472,7 +472,7 @@
                         <input type="date" id="editEndDate" required>
                     </div>
                     <div class="form-group">
-                        <label>طريقة الدفع:</label>
+                        <label>نوع الدفعات:</label>
                         <select id="editPaymentType" required onchange="handleEditPaymentTypeChange()">
                             <option value="سنوية">سنوية (دفعة لكل سنة)</option>
                             <option value="نصف سنوية">نصف سنوية (دفعتان/سنة)</option>
