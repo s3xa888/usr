@@ -1,0 +1,1708 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>منصة يسرُ - إدارة الإيجارات والمراكز التجارية</title>
+    <style>
+        :root {
+            --primary: #0f766e;
+            --primary-dark: #115e59;
+            --success: #16a34a;
+            --warning: #f97316;
+            --danger: #dc2626;
+            --bg: #f8fafc;
+            --text: #1e293b;
+        }
+        * {
+            box-sizing: border-box;
+        }
+        body {
+            font-family: Tahoma, sans-serif;
+            background-color: var(--bg);
+            color: var(--text);
+            margin: 0;
+            padding: 0;
+            width: 100%;
+            overflow-x: hidden;
+        }
+        .container {
+            width: 100%;
+            max-width: 980px;
+            margin: 0 auto;
+            padding: 10px 15px;
+        }
+        header {
+            background: #fff;
+            padding: 12px 15px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+        .header-right {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .menu-btn {
+            font-size: 22px;
+            background: none;
+            border: none;
+            cursor: pointer;
+            color: var(--primary);
+            padding: 0 5px;
+            width: auto;
+        }
+        .brand-logo {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .logo-icon {
+            width: 38px;
+            height: 38px;
+            background: linear-gradient(135deg, var(--primary), #14b8a6);
+            color: white;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+            font-weight: bold;
+        }
+        .brand-title {
+            font-size: 18px;
+            font-weight: bold;
+            color: var(--primary);
+            margin: 0;
+        }
+
+        .side-menu {
+            position: fixed;
+            top: 0;
+            right: -300px;
+            width: 260px;
+            height: 100%;
+            background: #fff;
+            box-shadow: -2px 0 10px rgba(0,0,0,0.1);
+            transition: right 0.3s ease;
+            z-index: 1000;
+            padding: 20px;
+        }
+        .side-menu.open { right: 0; }
+        .menu-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.4);
+            display: none;
+            z-index: 999;
+        }
+        .menu-overlay.show { display: block; }
+        .menu-item {
+            padding: 12px 15px;
+            margin-bottom: 8px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: bold;
+            color: var(--text);
+            background-color: #f1f5f9;
+        }
+        .menu-item:hover { background-color: #e2e8f0; color: var(--primary); }
+
+        #authScreen {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            background: linear-gradient(135deg, #0f766e, #14b8a6);
+            padding: 15px;
+        }
+        .auth-card {
+            background: #fff;
+            padding: 25px;
+            border-radius: 12px;
+            width: 100%;
+            max-width: 380px;
+            text-align: center;
+        }
+        #appScreen { display: none; }
+        .card {
+            background: #fff;
+            padding: 15px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+            margin-bottom: 15px;
+            width: 100%;
+            overflow: hidden;
+        }
+        .form-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+            gap: 12px;
+        }
+        .form-group {
+            margin-bottom: 12px;
+            text-align: right;
+        }
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+            font-size: 13px;
+        }
+        input, select {
+            width: 100%;
+            padding: 9px;
+            border: 1px solid #cbd5e1;
+            border-radius: 6px;
+            font-size: 13px;
+        }
+        button {
+            background-color: var(--primary);
+            color: white;
+            border: none;
+            padding: 9px 16px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 13px;
+            font-weight: bold;
+        }
+        button:hover { background-color: var(--primary-dark); }
+        .btn-excel { background-color: var(--success); width: auto; }
+        .btn-danger { background-color: var(--danger); padding: 5px 8px; font-size: 11px; width: auto; }
+        .btn-warning { background-color: var(--warning); padding: 5px 8px; font-size: 11px; width: auto; color: white; }
+        .btn-info { background-color: var(--primary); padding: 5px 8px; font-size: 11px; width: auto; }
+        
+        .action-btns {
+            display: flex;
+            gap: 4px;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .eye-btn {
+            background: none;
+            border: none;
+            cursor: pointer;
+            font-size: 15px;
+            padding: 0 3px;
+            margin-right: 3px;
+            width: auto;
+        }
+
+        .status-star {
+            font-size: 16px;
+            font-weight: bold;
+        }
+        .star-red { color: var(--danger); }
+        .star-green { color: var(--success); }
+
+        .next-installment-box {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 2px;
+            font-size: 11px;
+        }
+        .next-inst-amount {
+            font-weight: bold;
+            color: var(--primary-dark);
+        }
+        .next-inst-date {
+            color: #64748b;
+            font-size: 10px;
+        }
+        .next-inst-days {
+            font-weight: bold;
+            font-size: 10px;
+            padding: 2px 5px;
+            border-radius: 4px;
+        }
+        .days-normal { background: #e0f2fe; color: #0369a1; }
+        .days-urgent { background: #fef2f2; color: var(--danger); }
+        .days-due { background: #dcfce7; color: var(--success); }
+        .days-done { background: #f1f5f9; color: #64748b; }
+        .days-warning { background: #ffedd5; color: var(--warning); }
+
+        .alerts-header {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 8px;
+        }
+        .alerts-badge {
+            background-color: var(--warning);
+            color: white;
+            padding: 2px 6px;
+            border-radius: 10px;
+            font-size: 11px;
+            font-weight: bold;
+        }
+        .alerts-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+            gap: 8px;
+        }
+        .alert-card {
+            background: #fff7ed;
+            border: 1px solid #fed7aa;
+            border-right: 4px solid var(--warning);
+            border-radius: 8px;
+            padding: 8px;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            position: relative;
+            height: 95px;
+        }
+        .alert-card.urgent {
+            border-color: #fca5a5;
+            border-right-color: var(--danger);
+            background-color: #fef2f2;
+        }
+        .alert-close {
+            position: absolute;
+            top: 2px;
+            left: 4px;
+            background: none;
+            border: none;
+            color: #94a3b8;
+            font-size: 14px;
+            font-weight: bold;
+            cursor: pointer;
+            width: auto;
+            padding: 0;
+        }
+        .alert-close:hover { color: var(--danger); }
+        .alert-shop {
+            font-size: 13px;
+            font-weight: bold;
+            color: var(--primary-dark);
+            padding-left: 10px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        .alert-sub {
+            font-size: 10px;
+            color: #64748b;
+        }
+        .alert-days-box {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: rgba(255,255,255,0.9);
+            padding: 3px 6px;
+            border-radius: 4px;
+            border: 1px dashed #fdba74;
+            margin-top: 4px;
+        }
+        .alert-card.urgent .alert-days-box {
+            border-color: #fca5a5;
+        }
+        .alert-days-num {
+            font-size: 14px;
+            font-weight: bold;
+            color: var(--warning);
+        }
+        .alert-card.urgent .alert-days-num {
+            color: var(--danger);
+        }
+
+        .table-responsive {
+            width: 100%;
+            overflow-x: auto;
+            -webkit-overflow-scrolling: touch;
+        }
+        table {
+            width: 100%;
+            min-width: 1000px;
+            border-collapse: collapse;
+            margin-top: 10px;
+            font-size: 12px;
+        }
+        th, td {
+            border: 1px solid #e2e8f0;
+            padding: 7px 4px;
+            text-align: center;
+            white-space: nowrap;
+        }
+        th { background-color: #f1f5f9; }
+        .badge {
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 11px;
+            color: white;
+            font-weight: bold;
+        }
+        .badge-paid { background-color: var(--success); }
+        .badge-upcoming { background-color: var(--warning); }
+        .badge-overdue { background-color: var(--danger); }
+
+        .timer-box {
+            font-family: monospace;
+            font-size: 10px;
+            direction: ltr;
+            background: #f1f5f9;
+            padding: 2px 4px;
+            border-radius: 4px;
+            display: inline-block;
+            font-weight: bold;
+        }
+
+        .actions-bar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 8px;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+        .checkbox-group {
+            display: flex;
+            gap: 12px;
+            align-items: center;
+            margin-top: 6px;
+        }
+        .centers-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            gap: 12px;
+            margin-top: 12px;
+        }
+        .center-card {
+            background: #f8fafc;
+            border: 1px solid #cbd5e1;
+            padding: 12px;
+            border-radius: 8px;
+            text-align: center;
+            position: relative;
+        }
+        .center-card-content {
+            cursor: pointer;
+            margin-bottom: 8px;
+        }
+        .center-card-actions {
+            display: flex;
+            justify-content: center;
+            gap: 6px;
+            border-top: 1px solid #e2e8f0;
+            padding-top: 6px;
+        }
+        .manual-installments-box {
+            background: #f1f5f9;
+            padding: 12px;
+            border-radius: 8px;
+            margin-top: 8px;
+            grid-column: 1 / -1;
+        }
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.5);
+            z-index: 2000;
+            justify-content: center;
+            align-items: center;
+            padding: 10px;
+        }
+        .modal-content {
+            background: white;
+            padding: 15px;
+            border-radius: 8px;
+            width: 100%;
+            max-width: 750px;
+            max-height: 85vh;
+            overflow-y: auto;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="menu-overlay" id="menuOverlay" onclick="toggleMenu()"></div>
+    <div class="side-menu" id="sideMenu">
+        <h3 style="color: var(--primary); margin-top: 0; font-size: 16px;">القائمة الرئيسية</h3>
+        <hr style="border: 0; border-top: 1px solid #e2e8f0; margin-bottom: 12px;">
+        <div class="menu-item" onclick="showSection('main')">الصفحة الرئيسية</div>
+        <div class="menu-item" onclick="showSection('centers')">مراكزي التجارية</div>
+        <div class="menu-item admin-only" id="menuSubAccount" onclick="showSection('subAccount')">إنشاء حساب تابع</div>
+        <div class="menu-item admin-only" id="menuManageUsers" onclick="showSection('manageUsers')">إدارة الحسابات التابعة</div>
+    </div>
+
+    <!-- تسجيل الدخول -->
+    <div id="authScreen">
+        <div class="auth-card">
+            <div class="brand-logo" style="justify-content: center; margin-bottom: 12px;">
+                <div class="logo-icon">ي</div>
+                <div class="brand-title" style="font-size: 22px;">منصة يُسر</div>
+            </div>
+            <p style="color: #64748b; margin-bottom: 15px; font-size: 13px;">نظام متابعه الدفعات الايجارية في المراكز التجارية </p>
+            <form id="loginForm">
+                <div class="form-group">
+                    <label>اسم المستخدم:</label>
+                    <input type="text" id="loginUser" required placeholder="أدخل اسم المستخدم">
+                </div>
+                <div class="form-group">
+                    <label>كلمة المرور:</label>
+                    <input type="password" id="loginPass" required placeholder="أدخل كلمة المرور">
+                </div>
+                <button type="submit" style="width: 100%; margin-top: 8px;">دخول للنظام</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- التطبيق الرئيسي -->
+    <div id="appScreen">
+        <div class="container">
+            <header>
+                <div class="header-right">
+                    <button class="menu-btn" onclick="toggleMenu()">☰</button>
+                    <div class="brand-logo">
+                        <div class="logo-icon">ي</div>
+                        <div>
+                            <div class="brand-title">منصة يسرُ</div>
+                            <span id="userInfo" style="font-size: 11px; color: #64748b; display: block;"></span>
+                        </div>
+                    </div>
+                </div>
+                <button onclick="logout()" class="btn-danger">خروج</button>
+            </header>
+
+            <!-- مراكزي التجارية -->
+            <div class="card" id="centersSection" style="display: none;">
+                <h3 style="margin-top: 0; color: var(--primary); font-size: 16px;">مراكزي التجارية</h3>
+                
+                <div id="addCenterBox" class="admin-only" style="background: #f1f5f9; padding: 12px; border-radius: 8px; margin-bottom: 15px;">
+                    <h4 style="margin-top: 0; color: var(--primary-dark); font-size: 14px;">إضافة مركز تجاري جديد</h4>
+                    <form id="addCenterForm" style="display: flex; gap: 8px; flex-wrap: wrap;">
+                        <input type="text" id="newCenterName" required placeholder="اسم المركز التجاري الجديد" style="flex: 1; min-width: 180px;">
+                        <button type="submit" style="width: auto;">حفظ المركز</button>
+                    </form>
+                </div>
+
+                <p style="color: #64748b; font-size: 13px;">إدارة المراكز التجارية وتعديلها:</p>
+                <div class="centers-grid" id="centersGrid"></div>
+            </div>
+
+            <!-- إنشاء حساب تابع -->
+            <div class="card" id="subAccountSection" style="display: none; border: 1px solid #14b8a6; background-color: #f0fdfa;">
+                <h3 style="margin-top: 0; color: var(--primary); font-size: 16px;">إنشاء حساب تابع جديد والتحكم بالصلاحيات</h3>
+                <form id="subAccountForm">
+                    <div class="form-grid">
+                        <div class="form-group">
+                            <label>اسم المستخدم للتابع:</label>
+                            <input type="text" id="subUser" required placeholder="مثال: accountant1">
+                        </div>
+                        <div class="form-group">
+                            <label>كلمة المرور:</label>
+                            <input type="password" id="subPass" required placeholder="أنشئ كلمة مرور">
+                        </div>
+                        <div class="form-group" style="grid-column: span 2;">
+                            <label>نوع الصلاحية:</label>
+                            <div class="checkbox-group" style="flex-direction: column; align-items: flex-start; gap: 6px;">
+                                <label><input type="checkbox" id="subIsAdmin" onchange="toggleAdminPermissionCheckbox(this)"> منح صلاحية مدير نظام كامل (Admin)</label>
+                                <div id="subNormalPermissions" style="display: flex; gap: 12px; flex-wrap: wrap;">
+                                    <label><input type="checkbox" id="permAdd"> إضافة عقد جديد</label>
+                                    <label><input type="checkbox" id="permPay"> تحديد المدفوع وتغيير الحالة</label>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <button type="submit" style="width: auto;">حفظ الحساب التابع</button>
+                </form>
+            </div>
+
+            <!-- إدارة الحسابات التابعة -->
+            <div class="card" id="manageUsersSection" style="display: none;">
+                <h3 style="margin-top: 0; color: var(--primary); font-size: 16px;">إدارة الحسابات التابعة والتعديل عليها</h3>
+                <div class="table-responsive">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>اسم المستخدم</th>
+                                <th>كلمة المرور</th>
+                                <th>النوع</th>
+                                <th>الصلاحيات</th>
+                                <th>الإجراءات</th>
+                            </tr>
+                        </thead>
+                        <tbody id="usersTableBody"></tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- الصفحة الرئيسية -->
+            <div id="mainSection">
+                <div class="card" id="alertsContainer" style="display: none;">
+                    <div class="alerts-header">
+                        <h4 style="margin: 0; color: #1e1e1e; font-size: 15px;">تنبيهات الاستحقاق (أقل من 60 يوم)</h4>
+                        <span class="alerts-badge" id="alertsCount">0</span>
+                    </div>
+                    <div class="alerts-grid" id="alertsGrid"></div>
+                </div>
+
+                <div class="card" id="addContractCard">
+                    <h3 style="margin-top: 0; color: var(--primary); font-size: 16px;">إضافة وحدة وعقد إيجاري جديد</h3>
+                    <form id="rentalForm">
+                        <div class="form-grid">
+                            <div class="form-group">
+                                <label>اختر المركز التجاري:</label>
+                                <select id="centerNameSelect" required>
+                                    <option value="">-- اختر المركز التجاري --</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label>رقم المحل:</label>
+                                <input type="text" id="shopNumber" required placeholder="مثال: 102">
+                            </div>
+                            <div class="form-group">
+                                <label>اسم البراند:</label>
+                                <input type="text" id="brandName" required placeholder="مثال: عنوان القهوة">
+                            </div>
+                            <div class="form-group">
+                                <label>اسم المستأجر:</label>
+                                <input type="text" id="ownerName" required placeholder="مثال: عبدالله محمد">
+                            </div>
+                            <div class="form-group">
+                                <label>رقم تواصل المستأجر:</label>
+                                <input type="text" id="ownerPhone" required placeholder="مثال: 0500000000">
+                            </div>
+                            <div class="form-group">
+                                <label>مساحة الوحدة (م²):</label>
+                                <input type="text" id="shopArea" required placeholder="مثال: 50">
+                            </div>
+                            <div class="form-group">
+                                <label>قيمة الإيجار السنوي (ريال):</label>
+                                <input type="text" id="rentAmount" required placeholder="مثال: 60000">
+                            </div>
+                            <div class="form-group">
+                                <label>تاريخ بداية العقد:</label>
+                                <input type="date" id="startDate" required>
+                            </div>
+                            <div class="form-group">
+                                <label>تاريخ نهاية العقد:</label>
+                                <input type="date" id="endDate" required>
+                            </div>
+                            <div class="form-group">
+                                <label>طريقة الدفع:</label>
+                                <select id="paymentType" required onchange="handlePaymentTypeChange()">
+                                    <option value="سنوية">سنوية (دفعة لكل سنة)</option>
+                                    <option value="نصف سنوية">نصف سنوية (دفعتان/سنة)</option>
+                                    <option value="ربع سنوية">ربع سنوية (4 دفعات/سنة)</option>
+                                    <option value="يدوية">يدوية التسجيل</option>
+                                </select>
+                            </div>
+
+                            <div class="manual-installments-box" id="manualInstallmentsBox" style="display: none;">
+                                <h4>تسجيل الدفعات اليدوية</h4>
+                                <div class="form-group">
+                                    <label>عدد الدفعات اليدوية الإجمالي:</label>
+                                    <input type="text" id="manualCount" value="2" required onchange="generateManualFields()">
+                                </div>
+                                <div id="manualFieldsContainer"></div>
+                            </div>
+                        </div>
+                        <button type="submit" style="width: auto; margin-top: 12px;">حفظ العقد وتوليد كافة الدفعات</button>
+                    </form>
+                </div>
+
+                <!-- حاوية جداول المراكز التجارية تحت بعضها في الصفحة الرئيسية -->
+                <div id="centersTablesContainer"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- نافذة تعديل العقد والدفعات اليدوية -->
+    <div class="modal" id="editContractModal">
+        <div class="modal-content">
+            <h3 style="color: var(--primary); margin-top:0; font-size: 16px;">تعديل بيانات العقد بالكامل</h3>
+            <form id="editContractForm">
+                <input type="hidden" id="editContractId">
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label>المركز التجاري:</label>
+                        <select id="editCenterNameSelect" required></select>
+                    </div>
+                    <div class="form-group">
+                        <label>رقم المحل:</label>
+                        <input type="text" id="editShopNumber" required>
+                    </div>
+                    <div class="form-group">
+                        <label>اسم البراند:</label>
+                        <input type="text" id="editBrandName" required>
+                    </div>
+                    <div class="form-group">
+                        <label>اسم المستأجر:</label>
+                        <input type="text" id="editOwnerName" required>
+                    </div>
+                    <div class="form-group">
+                        <label>رقم تواصل المستأجر:</label>
+                        <input type="text" id="editOwnerPhone" required>
+                    </div>
+                    <div class="form-group">
+                        <label>مساحة الوحدة (م²):</label>
+                        <input type="text" id="editShopArea" required>
+                    </div>
+                    <div class="form-group">
+                        <label>قيمة الإيجار السنوي (ريال):</label>
+                        <input type="text" id="editRentAmount" required>
+                    </div>
+                    <div class="form-group">
+                        <label>تاريخ بداية العقد:</label>
+                        <input type="date" id="editStartDate" required>
+                    </div>
+                    <div class="form-group">
+                        <label>تاريخ نهاية العقد:</label>
+                        <input type="date" id="editEndDate" required>
+                    </div>
+                    <div class="form-group">
+                        <label>طريقة الدفع:</label>
+                        <select id="editPaymentType" required onchange="handleEditPaymentTypeChange()">
+                            <option value="سنوية">سنوية (دفعة لكل سنة)</option>
+                            <option value="نصف سنوية">نصف سنوية (دفعتان/سنة)</option>
+                            <option value="ربع سنوية">ربع سنوية (4 دفعات/سنة)</option>
+                            <option value="يدوية">يدوية التسجيل</option>
+                        </select>
+                    </div>
+
+                    <div class="manual-installments-box" id="editManualInstallmentsBox" style="display: none;">
+                        <h4>تعديل تفاصيل الدفعات اليدوية</h4>
+                        <div class="form-group">
+                            <label>عدد الدفعات اليدوية الإجمالي:</label>
+                            <input type="text" id="editManualCount" value="2" required onchange="generateEditManualFields()">
+                        </div>
+                        <div id="editManualFieldsContainer"></div>
+                    </div>
+                </div>
+                <div style="display: flex; gap: 8px; margin-top: 12px;">
+                    <button type="submit" style="flex: 1;">حفظ التعديلات</button>
+                    <button type="button" onclick="closeEditContractModal()" style="flex: 1; background-color: #64748b;">إلغاء</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- نافذة تعديل الحساب -->
+    <div class="modal" id="editUserModal">
+        <div class="modal-content" style="max-width: 420px;">
+            <h3 style="color: var(--primary); margin-top:0; font-size: 16px;">تعديل بيانات الحساب التابع</h3>
+            <input type="hidden" id="editUserOriginalUsername">
+            <div class="form-group">
+                <label>اسم المستخدم:</label>
+                <input type="text" id="editUsername" required>
+            </div>
+            <div class="form-group">
+                <label>كلمة المرور:</label>
+                <input type="text" id="editPassword" required>
+            </div>
+            <div class="form-group">
+                <label>الصلاحيات:</label>
+                <div class="checkbox-group" style="flex-direction: column; align-items: flex-start; gap: 6px;">
+                    <label><input type="checkbox" id="editIsAdmin" onchange="toggleEditAdminCheckbox(this)"> منح صلاحية مدير نظام (Admin)</label>
+                    <div id="editNormalPermissions" style="display: flex; gap: 12px;">
+                        <label><input type="checkbox" id="editPermAdd"> إضافة عقد جديد</label>
+                        <label><input type="checkbox" id="editPermPay"> تحديد المدفوع وتغيير الحالة</label>
+                    </div>
+                </div>
+            </div>
+            <div style="display: flex; gap: 8px; margin-top: 12px;">
+                <button onclick="saveUserEdits()" style="flex: 1;">حفظ</button>
+                <button onclick="closeEditUserModal()" style="flex: 1; background-color: #64748b;">إلغاء</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- نافذة تفاصيل الدفعات والمؤقت التنازلي -->
+    <div class="modal" id="installmentsModal">
+        <div class="modal-content">
+            <h3 style="color: var(--primary); margin-top:0; font-size: 16px;" id="modalContractTitle">تفاصيل دفعات العقد</h3>
+            <div class="table-responsive">
+                <table style="width: 100%; min-width: 550px;">
+                    <thead>
+                        <tr>
+                            <th>رقم الدفعة</th>
+                            <th>تاريخ الاستحقاق</th>
+                            <th>قيمة الدفعة</th>
+                            <th>وصف الحالة</th>
+                            <th>المؤقت التنازلي</th>
+                            <th>الإجراء</th>
+                        </tr>
+                    </thead>
+                    <tbody id="modalInstallmentsBody"></tbody>
+                </table>
+            </div>
+            <button onclick="closeModal()" style="margin-top: 12px; width: 100%; background-color: #64748b;">إغلاق</button>
+        </div>
+    </div>
+
+    <script>
+        let users = JSON.parse(localStorage.getItem('yesur_users')) || [
+            { username: 'admin', password: '11121', isOwner: true, isAdmin: true, permissions: { add: true, pay: true, view: true } }
+        ];
+        let centersList = JSON.parse(localStorage.getItem('yesur_centers')) || ['مجمع النخيل التجاري', 'مركز الروضة'];
+        let rentals = JSON.parse(localStorage.getItem('yesur_rentals')) || [];
+        let dismissedAlerts = [];
+        let currentUser = null;
+        let activeModalContractId = null;
+        let timerInterval = null;
+
+        function parseArabicNumbers(str) {
+            if (!str) return '';
+            return String(str).replace(/[٠-٩]/g, d => '٠١٢٣٤٥٦٧٨٩'.indexOf(d));
+        }
+
+        function formatCurrency(amount) {
+            const num = parseFloat(parseArabicNumbers(amount)) || 0;
+            return num.toLocaleString('en-US', { minimumFractionDigits: 0, maximumFractionDigits: 2 }) + ' ر.س';
+        }
+
+        function populateCenterSelectOptions() {
+            const select = document.getElementById('centerNameSelect');
+            const editSelect = document.getElementById('editCenterNameSelect');
+            
+            select.innerHTML = '<option value="">-- اختر المركز التجاري --</option>';
+            editSelect.innerHTML = '<option value="">-- اختر المركز التجاري --</option>';
+            
+            centersList.forEach(c => {
+                const opt = document.createElement('option');
+                opt.value = c;
+                opt.innerText = c;
+                select.appendChild(opt);
+
+                const editOpt = document.createElement('option');
+                editOpt.value = c;
+                editOpt.innerText = c;
+                editSelect.appendChild(editOpt);
+            });
+        }
+
+        function toggleMenu() {
+            document.getElementById('sideMenu').classList.toggle('open');
+            document.getElementById('menuOverlay').classList.toggle('show');
+        }
+
+        function showSection(section) {
+            document.getElementById('mainSection').style.display = section === 'main' ? 'block' : 'none';
+            document.getElementById('centersSection').style.display = section === 'centers' ? 'block' : 'none';
+            document.getElementById('subAccountSection').style.display = section === 'subAccount' ? 'block' : 'none';
+            document.getElementById('manageUsersSection').style.display = section === 'manageUsers' ? 'block' : 'none';
+            
+            if (section === 'main') renderAllCentersTables();
+            if (section === 'centers') renderCenters();
+            if (section === 'manageUsers') renderUsersTable();
+            
+            if (document.getElementById('sideMenu').classList.contains('open')) {
+                toggleMenu();
+            }
+        }
+
+        document.getElementById('loginForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            const u = document.getElementById('loginUser').value.trim();
+            const p = document.getElementById('loginPass').value.trim();
+
+            const foundUser = users.find(x => x.username === u && x.password === p);
+            if (foundUser) {
+                currentUser = foundUser;
+                const hasAdminAccess = currentUser.isOwner || currentUser.isAdmin;
+
+                document.getElementById('authScreen').style.display = 'none';
+                document.getElementById('appScreen').style.display = 'block';
+                document.getElementById('userInfo').innerText = `المستخدم: ${currentUser.username} (${hasAdminAccess ? 'مدير نظام / Admin' : 'حساب تابع'})`;
+                
+                document.querySelectorAll('.admin-only').forEach(el => {
+                    el.style.display = hasAdminAccess ? 'block' : 'none';
+                });
+                document.getElementById('addContractCard').style.display = (hasAdminAccess || currentUser.permissions.add) ? 'block' : 'none';
+                
+                populateCenterSelectOptions();
+                showSection('main');
+                checkAlerts();
+            } else {
+                alert('بيانات الدخول غير صحيحة.');
+            }
+        });
+
+        function toggleAdminPermissionCheckbox(checkbox) {
+            const normalPerms = document.getElementById('subNormalPermissions');
+            normalPerms.style.display = checkbox.checked ? 'none' : 'flex';
+        }
+
+        function toggleEditAdminCheckbox(checkbox) {
+            const normalPerms = document.getElementById('editNormalPermissions');
+            normalPerms.style.display = checkbox.checked ? 'none' : 'flex';
+        }
+
+        document.getElementById('addCenterForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            if (!currentUser.isOwner && !currentUser.isAdmin) return;
+
+            const name = document.getElementById('newCenterName').value.trim();
+            if (!name) return;
+
+            if (centersList.includes(name)) {
+                alert('هذا المركز مسجل مسبقاً.');
+                return;
+            }
+
+            centersList.push(name);
+            localStorage.setItem('yesur_centers', JSON.stringify(centersList));
+            alert('تم حفظ المركز التجاري بنجاح.');
+            this.reset();
+            populateCenterSelectOptions();
+            renderCenters();
+            renderAllCentersTables();
+        });
+
+        function editCenter(oldName) {
+            if (!currentUser.isOwner && !currentUser.isAdmin) return;
+            const newName = prompt('أدخل الاسم الجديد للمركز التجاري:', oldName);
+            if (!newName || !newName.trim()) return;
+
+            const trimmedName = newName.trim();
+            if (centersList.includes(trimmedName)) {
+                alert('هذا الاسم موجود مسبقاً.');
+                return;
+            }
+
+            const index = centersList.indexOf(oldName);
+            if (index !== -1) {
+                centersList[index] = trimmedName;
+                localStorage.setItem('yesur_centers', JSON.stringify(centersList));
+            }
+
+            rentals.forEach(r => {
+                if (r.centerName === oldName) {
+                    r.centerName = trimmedName;
+                }
+            });
+            localStorage.setItem('yesur_rentals', JSON.stringify(rentals));
+
+            alert('تم تعديل اسم المركز التجاري بنجاح.');
+            populateCenterSelectOptions();
+            renderCenters();
+            renderAllCentersTables();
+        }
+
+        function deleteCenter(centerName) {
+            if (!currentUser.isOwner && !currentUser.isAdmin) return;
+            
+            const hasContracts = rentals.some(r => r.centerName === centerName);
+            if (hasContracts) {
+                alert('لا يمكن حذف هذا المركز التجاري لوجود عقود نشطة مرتبطة به.');
+                return;
+            }
+
+            if (confirm(`هل أنت متأكد من حذف المركز التجاري (${centerName})؟`)) {
+                centersList = centersList.filter(c => c !== centerName);
+                localStorage.setItem('yesur_centers', JSON.stringify(centersList));
+                alert('تم حذف المركز بنجاح.');
+                populateCenterSelectOptions();
+                renderCenters();
+                renderAllCentersTables();
+            }
+        }
+
+        document.getElementById('subAccountForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            if (!currentUser.isOwner && !currentUser.isAdmin) return;
+
+            const u = document.getElementById('subUser').value.trim();
+            const p = document.getElementById('subPass').value.trim();
+            const isAdmin = document.getElementById('subIsAdmin').checked;
+
+            if (users.some(x => x.username === u)) {
+                alert('اسم المستخدم موجود مسبقاً.');
+                return;
+            }
+
+            users.push({
+                username: u,
+                password: p,
+                isOwner: false,
+                isAdmin: isAdmin,
+                permissions: {
+                    add: isAdmin ? true : document.getElementById('permAdd').checked,
+                    pay: isAdmin ? true : document.getElementById('permPay').checked,
+                    view: true
+                }
+            });
+            localStorage.setItem('yesur_users', JSON.stringify(users));
+            alert('تم إنشاء الحساب بنجاح!');
+            this.reset();
+            document.getElementById('subNormalPermissions').style.display = 'flex';
+            showSection('main');
+        });
+
+        function renderUsersTable() {
+            const tbody = document.getElementById('usersTableBody');
+            tbody.innerHTML = '';
+
+            users.forEach((u, index) => {
+                const tr = document.createElement('tr');
+                tr.innerHTML = `
+                    <td>${u.username}</td>
+                    <td>
+                        <span id="pass-text-${index}">****</span>
+                        <button type="button" class="eye-btn" onclick="togglePasswordVisibility(${index}, '${u.password}')" title="إظهار/إخفاء كلمة المرور">👁</button>
+                    </td>
+                    <td>${u.isOwner ? 'المالك الأساسي' : (u.isAdmin ? 'مدير نظام (Admin)' : 'حساب تابع')}</td>
+                    <td>${u.isOwner || u.isAdmin ? 'مطلق (كامل الصلاحيات)' : `إضافة: ${u.permissions.add ? 'نعم' : 'لا'} \vert{} دفعات: ${u.permissions.pay ? 'نعم' : 'لا'}`}</td>
+                    <td>
+                        ${!u.isOwner ? `
+                            <button onclick="openEditUserModal('${u.username}')" class="btn-warning">تعديل</button>
+                            <button onclick="deleteUser('${u.username}')" class="btn-danger">حذف</button>
+                        ` : '<span style="color:#64748b; font-size:11px;">محمي</span>'}
+                    </td>
+                `;
+                tbody.appendChild(tr);
+            });
+        }
+
+        function togglePasswordVisibility(index, realPassword) {
+            const span = document.getElementById(`pass-text-${index}`);
+            if (span.innerText === '****') {
+                span.innerText = realPassword;
+                span.style.color = 'var(--primary)';
+            } else {
+                span.innerText = '****';
+                span.style.color = 'inherit';
+            }
+        }
+
+        function openEditUserModal(username) {
+            const user = users.find(u => u.username === username);
+            if (!user) return;
+
+            document.getElementById('editUserOriginalUsername').value = user.username;
+            document.getElementById('editUsername').value = user.username;
+            document.getElementById('editPassword').value = user.password;
+            document.getElementById('editIsAdmin').checked = user.isAdmin || false;
+            document.getElementById('editPermAdd').checked = user.permissions.add;
+            document.getElementById('editPermPay').checked = user.permissions.pay;
+
+            document.getElementById('editNormalPermissions').style.display = user.isAdmin ? 'none' : 'flex';
+            document.getElementById('editUserModal').style.display = 'flex';
+        }
+
+        function closeEditUserModal() {
+            document.getElementById('editUserModal').style.display = 'none';
+        }
+
+        function saveUserEdits() {
+            const origName = document.getElementById('editUserOriginalUsername').value;
+            const newName = document.getElementById('editUsername').value.trim();
+            const newPass = document.getElementById('editPassword').value.trim();
+            const isAdmin = document.getElementById('editIsAdmin').checked;
+
+            if (newName !== origName && users.some(u => u.username === newName)) {
+                alert('اسم المستخدم الجديد موجود مسبقاً.');
+                return;
+            }
+
+            const user = users.find(u => u.username === origName);
+            if (user) {
+                user.username = newName;
+                user.password = newPass;
+                user.isAdmin = isAdmin;
+                user.permissions.add = isAdmin ? true : document.getElementById('editPermAdd').checked;
+                user.permissions.pay = isAdmin ? true : document.getElementById('editPermPay').checked;
+
+                localStorage.setItem('yesur_users', JSON.stringify(users));
+                alert('تم تحديث بيانات الحساب بنجاح.');
+                closeEditUserModal();
+                renderUsersTable();
+            }
+        }
+
+        function deleteUser(username) {
+            if (confirm(`هل أنت متأكد من حذف الحساب (${username})؟`)) {
+                users = users.filter(u => u.username !== username);
+                localStorage.setItem('yesur_users', JSON.stringify(users));
+                renderUsersTable();
+            }
+        }
+
+        function handlePaymentTypeChange() {
+            const type = document.getElementById('paymentType').value;
+            const box = document.getElementById('manualInstallmentsBox');
+            if (type === 'يدوية') {
+                box.style.display = 'block';
+                generateManualFields();
+            } else {
+                box.style.display = 'none';
+            }
+        }
+
+        function generateManualFields() {
+            const countRaw = document.getElementById('manualCount').value;
+            const count = parseInt(parseArabicNumbers(countRaw)) || 1;
+            const container = document.getElementById('manualFieldsContainer');
+            container.innerHTML = '';
+
+            for (let i = 1; i <= count; i++) {
+                container.innerHTML += `
+                    <div style="display: flex; gap: 8px; margin-bottom: 8px;">
+                        <input type="date" class="manual-date" required>
+                        <input type="text" class="manual-amount" placeholder="قيمة الدفعة ${i}" required>
+                    </div>
+                `;
+            }
+        }
+
+        function handleEditPaymentTypeChange() {
+            const type = document.getElementById('editPaymentType').value;
+            const box = document.getElementById('editManualInstallmentsBox');
+            if (type === 'يدوية') {
+                box.style.display = 'block';
+                generateEditManualFields();
+            } else {
+                box.style.display = 'none';
+            }
+        }
+
+        function generateEditManualFields(existingInstallments = null) {
+            const countRaw = document.getElementById('editManualCount').value;
+            const count = parseInt(parseArabicNumbers(countRaw)) || 1;
+            const container = document.getElementById('editManualFieldsContainer');
+            container.innerHTML = '';
+
+            for (let i = 1; i <= count; i++) {
+                let dateVal = '';
+                let amountVal = '';
+
+                if (existingInstallments && existingInstallments[i - 1]) {
+                    dateVal = existingInstallments[i - 1].dueDate;
+                    amountVal = existingInstallments[i - 1].amount;
+                }
+
+                container.innerHTML += `
+                    <div style="display: flex; gap: 8px; margin-bottom: 8px;">
+                        <input type="date" class="edit-manual-date" value="${dateVal}" required>
+                        <input type="text" class="edit-manual-amount" value="${amountVal}" placeholder="قيمة الدفعة ${i}" required>
+                    </div>
+                `;
+            }
+        }
+
+        function generateInstallmentsArray(startDateStr, endDateStr, pType, annualRent) {
+            const start = new Date(startDateStr);
+            const end = new Date(endDateStr);
+
+            let years = end.getFullYear() - start.getFullYear();
+            const monthDiff = end.getMonth() - start.getMonth();
+            if (monthDiff > 6 || (monthDiff === 6 && end.getDate() >= start.getDate())) {
+                years += 0.5;
+            }
+            if (years <= 0) years = 1;
+
+            const totalContractRent = annualRent * years;
+
+            let perYearCount = 1;
+            let monthsStep = 12;
+
+            if (pType === 'نصف سنوية') { perYearCount = 2; monthsStep = 6; }
+            else if (pType === 'ربع سنوية') { perYearCount = 4; monthsStep = 3; }
+
+            const totalInstallmentsCount = Math.round(perYearCount * years);
+            const installmentVal = (totalContractRent / totalInstallmentsCount).toFixed(2);
+            let currentDueDate = new Date(startDateStr);
+            let generatedInstallments = [];
+
+            for (let i = 1; i <= totalInstallmentsCount; i++) {
+                const formattedDate = currentDueDate.toISOString().split('T')[0];
+                generatedInstallments.push({
+                    id: i,
+                    dueDate: formattedDate,
+                    amount: parseFloat(installmentVal),
+                    status: 'غير مسدد'
+                });
+                currentDueDate.setMonth(currentDueDate.getMonth() + monthsStep);
+            }
+            return generatedInstallments;
+        }
+
+        document.getElementById('rentalForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            const hasAdminAccess = currentUser.isOwner || currentUser.isAdmin;
+            if (!hasAdminAccess && !currentUser.permissions.add) return;
+
+            const selectedCenter = document.getElementById('centerNameSelect').value;
+            if (!selectedCenter) {
+                alert('يرجى اختيار مركز تجاري من القائمة.');
+                return;
+            }
+
+            const annualRentRaw = document.getElementById('rentAmount').value;
+            const annualRent = parseFloat(parseArabicNumbers(annualRentRaw));
+            
+            const startDateStr = document.getElementById('startDate').value;
+            const endDateStr = document.getElementById('endDate').value;
+            const pType = document.getElementById('paymentType').value;
+
+            if (new Date(endDateStr) <= new Date(startDateStr)) {
+                alert('تاريخ نهاية العقد يجب أن يكون بعد تاريخ بداية العقد.');
+                return;
+            }
+
+            let generatedInstallments = [];
+
+            if (pType === 'يدوية') {
+                const dates = document.querySelectorAll('.manual-date');
+                const amounts = document.querySelectorAll('.manual-amount');
+                
+                let isMissing = false;
+                dates.forEach((d, index) => {
+                    if (!d.value || !amounts[index].value) isMissing = true;
+                });
+
+                if (isMissing) {
+                    alert('يرجى تعبئة كافة التواريخ والقيم للدفعات اليدوية.');
+                    return;
+                }
+
+                dates.forEach((d, index) => {
+                    const amt = parseFloat(parseArabicNumbers(amounts[index].value)) || 0;
+                    generatedInstallments.push({
+                        id: index + 1,
+                        dueDate: d.value,
+                        amount: amt,
+                        status: 'غير مسدد'
+                    });
+                });
+            } else {
+                generatedInstallments = generateInstallmentsArray(startDateStr, endDateStr, pType, annualRent);
+            }
+
+            const newContract = {
+                id: Date.now(),
+                centerName: selectedCenter,
+                shopNumber: parseArabicNumbers(document.getElementById('shopNumber').value.trim()),
+                brandName: document.getElementById('brandName').value.trim(),
+                ownerName: document.getElementById('ownerName').value.trim(),
+                ownerPhone: parseArabicNumbers(document.getElementById('ownerPhone').value.trim()),
+                shopArea: parseArabicNumbers(document.getElementById('shopArea').value.trim()),
+                rentAmount: annualRent,
+                paymentType: pType,
+                startDate: startDateStr,
+                endDate: endDateStr,
+                installments: generatedInstallments,
+                addedBy: currentUser ? currentUser.username : 'غير معروف',
+                editedBy: '-'
+            };
+
+            rentals.push(newContract);
+            localStorage.setItem('yesur_rentals', JSON.stringify(rentals));
+            renderAllCentersTables();
+            checkAlerts();
+            this.reset();
+            document.getElementById('manualInstallmentsBox').style.display = 'none';
+            alert('تم حفظ العقد بنجاح.');
+        });
+
+        function openEditContractModal(contractId) {
+            const contract = rentals.find(r => r.id === contractId);
+            if (!contract) return;
+
+            document.getElementById('editContractId').value = contract.id;
+            document.getElementById('editCenterNameSelect').value = contract.centerName;
+            document.getElementById('editShopNumber').value = contract.shopNumber;
+            document.getElementById('editBrandName').value = contract.brandName;
+            document.getElementById('editOwnerName').value = contract.ownerName;
+            document.getElementById('editOwnerPhone').value = contract.ownerPhone;
+            document.getElementById('editShopArea').value = contract.shopArea;
+            document.getElementById('editRentAmount').value = contract.rentAmount;
+            document.getElementById('editStartDate').value = contract.startDate;
+            document.getElementById('editEndDate').value = contract.endDate || '';
+            document.getElementById('editPaymentType').value = contract.paymentType;
+
+            const editManualBox = document.getElementById('editManualInstallmentsBox');
+            if (contract.paymentType === 'يدوية') {
+                editManualBox.style.display = 'block';
+                document.getElementById('editManualCount').value = contract.installments.length;
+                generateEditManualFields(contract.installments);
+            } else {
+                editManualBox.style.display = 'none';
+            }
+
+            document.getElementById('editContractModal').style.display = 'flex';
+        }
+
+        function closeEditContractModal() {
+            document.getElementById('editContractModal').style.display = 'none';
+        }
+
+        document.getElementById('editContractForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            const id = parseInt(document.getElementById('editContractId').value);
+            const contract = rentals.find(r => r.id === id);
+
+            if (contract) {
+                const annualRentRaw = document.getElementById('editRentAmount').value;
+                const annualRent = parseFloat(parseArabicNumbers(annualRentRaw));
+                const startDateStr = document.getElementById('editStartDate').value;
+                const endDateStr = document.getElementById('editEndDate').value;
+                const pType = document.getElementById('editPaymentType').value;
+
+                if (new Date(endDateStr) <= new Date(startDateStr)) {
+                    alert('تاريخ نهاية العقد يجب أن يكون بعد تاريخ بداية العقد.');
+                    return;
+                }
+
+                contract.centerName = document.getElementById('editCenterNameSelect').value;
+                contract.shopNumber = parseArabicNumbers(document.getElementById('editShopNumber').value.trim());
+                contract.brandName = document.getElementById('editBrandName').value.trim();
+                contract.ownerName = document.getElementById('editOwnerName').value.trim();
+                contract.ownerPhone = parseArabicNumbers(document.getElementById('editOwnerPhone').value.trim());
+                contract.shopArea = parseArabicNumbers(document.getElementById('editShopArea').value.trim());
+                contract.rentAmount = annualRent;
+                contract.startDate = startDateStr;
+                contract.endDate = endDateStr;
+                contract.paymentType = pType;
+                
+                contract.editedBy = currentUser ? currentUser.username : 'غير معروف';
+
+                if (pType === 'يدوية') {
+                    const dates = document.querySelectorAll('.edit-manual-date');
+                    const amounts = document.querySelectorAll('.edit-manual-amount');
+                    
+                    let newManualInstallments = [];
+                    let isMissing = false;
+
+                    dates.forEach((d, index) => {
+                        if (!d.value || !amounts[index].value) isMissing = true;
+                    });
+
+                    if (isMissing) {
+                        alert('يرجى تعبئة كافة التواريخ والقيم للدفعات اليدوية.');
+                        return;
+                    }
+
+                    dates.forEach((d, index) => {
+                        const amt = parseFloat(parseArabicNumbers(amounts[index].value)) || 0;
+                        const prevStatus = (contract.installments[index] && contract.installments[index].status) ? contract.installments[index].status : 'غير مسدد';
+                        newManualInstallments.push({
+                            id: index + 1,
+                            dueDate: d.value,
+                            amount: amt,
+                            status: prevStatus
+                        });
+                    });
+
+                    contract.installments = newManualInstallments;
+                } else {
+                    contract.installments = generateInstallmentsArray(startDateStr, endDateStr, pType, annualRent);
+                }
+
+                localStorage.setItem('yesur_rentals', JSON.stringify(rentals));
+                alert('تم تحديث كافة بيانات العقد والدفعات بنجاح.');
+                closeEditContractModal();
+                renderAllCentersTables();
+                checkAlerts();
+            }
+        });
+
+        function getNextInstallmentInfo(contract) {
+            const unpaid = contract.installments.filter(inst => inst.status !== 'تم السداد' && inst.status !== 'مسدد');
+            
+            if (unpaid.length === 0) {
+                return {
+                    starHtml: '',
+                    html: `
+                        <div class="next-installment-box">
+                            <span class="next-inst-days days-done">تم سداد جميع الدفعات</span>
+                        </div>
+                    `
+                };
+            }
+
+            unpaid.sort((a, b) => new Date(a.dueDate) - new Date(b.dueDate));
+            const next = unpaid[0];
+
+            const today = new Date();
+            today.setHours(0, 0, 0, 0);
+            const due = new Date(next.dueDate);
+            due.setHours(0, 0, 0, 0);
+
+            const diffDays = Math.ceil((due - today) / (1000 * 60 * 60 * 24));
+
+            let daysText = '';
+            let daysClass = 'days-normal';
+            let starHtml = '';
+
+            if (diffDays < 0) {
+                daysText = `متأخرة بـ ${Math.abs(diffDays)} يوم`;
+                daysClass = 'days-urgent';
+                starHtml = '<span class="status-star star-red" title="دفعة متأخرة">*</span>';
+            } else if (diffDays === 0) {
+                daysText = 'مستحقة اليوم';
+                daysClass = 'days-due';
+                starHtml = '<span class="status-star star-green" title="الدفعة حانت اليوم">*</span>';
+            } else if (diffDays <= 60) {
+                daysText = `متبقي ${diffDays} يوم`;
+                daysClass = 'days-warning';
+                starHtml = '';
+            } else {
+                daysText = `متبقي ${diffDays} يوم`;
+                daysClass = 'days-normal';
+                starHtml = ''; 
+            }
+
+            return {
+                starHtml: starHtml,
+                html: `
+                    <div class="next-installment-box">
+                        <span class="next-inst-amount">${formatCurrency(next.amount)}</span>
+                        <span class="next-inst-date">${next.dueDate}</span>
+                        <span class="next-inst-days ${daysClass}">${daysText}</span>
+                    </div>
+                `
+            };
+        }
+
+        function renderCenters() {
+            const grid = document.getElementById('centersGrid');
+            grid.innerHTML = '';
+
+            if (centersList.length === 0) {
+                grid.innerHTML = '<p style="color:#64748b; grid-column:span 3;">لا توجد مراكز تجارية مسجلة حالياً.</p>';
+                return;
+            }
+
+            const hasAdminAccess = currentUser.isOwner || currentUser.isAdmin;
+
+            centersList.forEach(center => {
+                const count = rentals.filter(r => r.centerName === center).length;
+                grid.innerHTML += `
+                    <div class="center-card">
+                        <div class="center-card-content">
+                            <h4 style="margin: 0 0 4px 0; color: var(--primary); font-size: 14px;">${center}</h4>
+                            <span style="font-size: 16px; font-weight: bold;">${count}</span> عقود
+                        </div>
+                        ${hasAdminAccess ? `
+                            <div class="center-card-actions">
+                                <button onclick="editCenter('${center}')" class="btn-warning" style="padding: 3px 8px; font-size: 10px;">تعديل</button>
+                                <button onclick="deleteCenter('${center}')" class="btn-danger" style="padding: 3px 8px; font-size: 10px;">حذف</button>
+                            </div>
+                        ` : ''}
+                    </div>
+                `;
+            });
+        }
+
+        function renderAllCentersTables() {
+            const container = document.getElementById('centersTablesContainer');
+            container.innerHTML = '';
+
+            if (centersList.length === 0) {
+                container.innerHTML = '<div class="card"><p style="text-align:center; color:#64748b;">لا توجد مراكز تجارية مسجلة.</p></div>';
+                return;
+            }
+
+            const hasAdminAccess = currentUser.isOwner || currentUser.isAdmin;
+
+            centersList.forEach(centerName => {
+                const centerContracts = rentals.filter(r => r.centerName === centerName).sort((a, b) => {
+                    const numA = parseInt(parseArabicNumbers(a.shopNumber)) || 0;
+                    const numB = parseInt(parseArabicNumbers(b.shopNumber)) || 0;
+                    return numA - numB;
+                });
+
+                let tableRowsHtml = '';
+                if (centerContracts.length === 0) {
+                    tableRowsHtml = `<tr><td colspan="14" style="text-align:center; color:#64748b; padding: 18px; font-weight: bold;">لا توجد عقود تجارية على هذا المركز</td></tr>`;
+                } else {
+                    centerContracts.forEach(item => {
+                        const nextInst = getNextInstallmentInfo(item);
+                        const addedBy = item.addedBy || '-';
+                        const editedBy = item.editedBy || '-';
+
+                        tableRowsHtml += `
+                            <tr>
+                                <td>${nextInst.starHtml}</td>
+                                <td>${item.shopNumber}</td>
+                                <td><strong style="font-weight: bold;">${item.brandName}</strong></td>
+                                <td>${item.ownerName}</td>
+                                <td>${item.ownerPhone}</td>
+                                <td>${item.shopArea} م²</td>
+                                <td>${formatCurrency(item.rentAmount)}</td>
+                                <td>${nextInst.html}</td>
+                                <td>${item.paymentType}</td>
+                                <td>${item.startDate}</td>
+                                <td>${item.endDate || '-'}</td>
+                                <td>${addedBy}</td>
+                                <td>${editedBy}</td>
+                                <td>
+                                    <div class="action-btns">
+                                        <button onclick="openModal(${item.id})" class="btn-info">الدفعات</button>
+                                        ${hasAdminAccess ? `
+                                            <button onclick="openEditContractModal(${item.id})" class="btn-warning">تعديل</button>
+                                            <button onclick="deleteContract(${item.id})" class="btn-danger">حذف</button>
+                                        ` : ''}
+                                    </div>
+                                </td>
+                            </tr>
+                        `;
+                    });
+                }
+
+                const cardDiv = document.createElement('div');
+                cardDiv.className = 'card';
+                cardDiv.innerHTML = `
+                    <div class="actions-bar">
+                        <h3 style="margin: 0; color: var(--primary); font-size: 16px;">سجل عقود (${centerName})</h3>
+                        ${centerContracts.length > 0 ? `<button onclick="exportCenterExcel('${centerName}')" class="btn-excel">تصدير إلى Excel</button>` : ''}
+                    </div>
+                    <div class="table-responsive">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>#</th>
+                                    <th>المحل</th>
+                                    <th>البراند</th>
+                                    <th>المستأجر</th>
+                                    <th>التواصل</th>
+                                    <th>المساحة</th>
+                                    <th>الإيجار السنوي</th>
+                                    <th>الدفعة القادمة</th>
+                                    <th>طريقة الدفع</th>
+                                    <th>بداية العقد</th>
+                                    <th>نهاية العقد</th>
+                                    <th>مضاف بواسطة</th>
+                                    <th>معدل بواسطة</th>
+                                    <th style="min-width: 200px;">الإجراءات</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                ${tableRowsHtml}
+                            </tbody>
+                        </table>
+                    </div>
+                `;
+                container.appendChild(cardDiv);
+            });
+        }
+
+        function openModal(contractId) {
+            activeModalContractId = contractId;
+            const contract = rentals.find(r => r.id === contractId);
+            if (!contract) return;
+
+            document.getElementById('modalContractTitle').innerText = `جدول دفعات: ${contract.brandName} (${contract.centerName})`;
+            renderModalInstallments(contract);
+            document.getElementById('installmentsModal').style.display = 'flex';
+
+            if (timerInterval) clearInterval(timerInterval);
+            timerInterval = setInterval(() => {
+                updateTimers(contract);
+            }, 1000);
+        }
+
+        function getInstallmentStatusDetails(inst) {
+            if (inst.status === 'تم السداد' || inst.status === 'مسدد') {
+                return { text: 'تم السداد', badgeClass: 'badge-paid' };
+            }
+            
+            const now = new Date();
+            const dueDate = new Date(inst.dueDate + 'T23:59:59');
+
+            if (now > dueDate) {
+                return { text: 'دفعة متأخرة', badgeClass: 'badge-overdue' };
+            } else {
+                return { text: 'دفعة قادمة', badgeClass: 'badge-upcoming' };
+            }
+        }
+
+        function renderModalInstallments(contract) {
+            const tbody = document.getElementById('modalInstallmentsBody');
+            tbody.innerHTML = '';
+            const hasAdminAccess = currentUser.isOwner || currentUser.isAdmin;
+            const canPay = hasAdminAccess || currentUser.permissions.pay;
+
+            contract.installments.forEach(inst => {
+                const statusInfo = getInstallmentStatusDetails(inst);
+                const tr = document.createElement('tr');
+                tr.innerHTML = `
+                    <td>الدفعة ${inst.id}</td>
+                    <td>${inst.dueDate}</td>
+                    <td>${formatCurrency(inst.amount)}</td>
+                    <td><span class="badge ${statusInfo.badgeClass}">${statusInfo.text}</span></td>
+                    <td><span class="timer-box" id="timer-${inst.id}">--:--:--</span></td>
+                    <td>
+                        ${canPay ? `<button onclick="toggleInstallmentStatus(${inst.id})" style="padding: 3px 6px; font-size: 10px;">تغيير</button>` : 'معاينة'}
+                    </td>
+                `;
+                tbody.appendChild(tr);
+            });
+
+            updateTimers(contract);
+        }
+
+        function updateTimers(contract) {
+            const now = new Date().getTime();
+
+            contract.installments.forEach(inst => {
+                const timerEl = document.getElementById(`timer-${inst.id}`);
+                if (!timerEl) return;
+
+                if (inst.status === 'تم السداد' || inst.status === 'مسدد') {
+                    timerEl.innerText = 'مكتمل';
+                    timerEl.style.color = 'var(--success)';
+                    return;
+                }
+
+                const dueTime = new Date(inst.dueDate + 'T23:59:59').getTime();
+                const distance = dueTime - now;
+
+                if (distance < 0) {
+                    timerEl.innerText = 'منتهية';
+                    timerEl.style.color = 'var(--danger)';
+                } else {
+                    const days = Math.floor(distance / (1000 * 60 * 60 * 24));
+                    const hours = Math.floor((distance % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+                    const minutes = Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60));
+                    const seconds = Math.floor((distance % (1000 * 60)) / 1000);
+
+                    timerEl.innerText = `${days}d ${hours}h ${minutes}m ${seconds}s`;
+                    timerEl.style.color = 'var(--primary)';
+                }
+            });
+        }
+
+        function toggleInstallmentStatus(instId) {
+            const contract = rentals.find(r => r.id === activeModalContractId);
+            if (contract) {
+                const inst = contract.installments.find(i => i.id === instId);
+                if (inst) {
+                    inst.status = (inst.status === 'تم السداد' || inst.status === 'مسدد') ? 'غير مسدد' : 'تم السداد';
+                    localStorage.setItem('yesur_rentals', JSON.stringify(rentals));
+                    renderModalInstallments(contract);
+                    renderAllCentersTables();
+                    checkAlerts();
+                }
+            }
+        }
+
+        function closeModal() {
+            document.getElementById('installmentsModal').style.display = 'none';
+            if (timerInterval) clearInterval(timerInterval);
+        }
+
+        function checkAlerts() {
+            const today = new Date();
+            today.setHours(0, 0, 0, 0);
+
+            let upcomingAlerts = [];
+
+            rentals.forEach(contract => {
+                contract.installments.forEach(inst => {
+                    if (inst.status !== 'تم السداد' && inst.status !== 'مسدد') {
+                        const due = new Date(inst.dueDate);
+                        due.setHours(0, 0, 0, 0);
+
+                        const diffTime = due - today;
+                        const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+
+                        if (diffDays <= 60) {
+                            const alertKey = `${contract.id}_${inst.id}`;
+                            if (!dismissedAlerts.includes(alertKey)) {
+                                upcomingAlerts.push({
+                                    key: alertKey,
+                                    brandName: contract.brandName,
+                                    shopNumber: contract.shopNumber,
+                                    centerName: contract.centerName,
+                                    amount: inst.amount,
+                                    daysLeft: diffDays
+                                });
+                            }
+                        }
+                    }
+                });
+            });
+
+            const alertsContainer = document.getElementById('alertsContainer');
+            const alertsGrid = document.getElementById('alertsGrid');
+            const alertsCount = document.getElementById('alertsCount');
+
+            if (upcomingAlerts.length > 0) {
+                alertsContainer.style.display = 'block';
+                alertsCount.innerText = upcomingAlerts.length;
+                alertsGrid.innerHTML = '';
+
+                upcomingAlerts.forEach(item => {
+                    const isUrgent = item.daysLeft < 0; 
+                    const daysText = item.daysLeft < 0 
+                        ? `متأخرة بـ ${Math.abs(item.daysLeft)} يوم` 
+                        : (item.daysLeft === 0 ? 'مستحقة اليوم' : `${item.daysLeft} يوم متبقي`);
+
+                    alertsGrid.innerHTML += `
+                        <div class="alert-card ${isUrgent ? 'urgent' : ''}">
+                            <button class="alert-close" onclick="dismissAlert('${item.key}')">×</button>
+                            <div>
+                                <div class="alert-shop"><strong>${item.brandName}</strong></div>
+                                <div class="alert-sub">محل ${item.shopNumber} (${item.centerName})</div>
+                            </div>
+                            <div class="alert-days-box">
+                                <span class="alert-days-num">${item.daysLeft <= 0 ? '!' : item.daysLeft}</span>
+                                <span style="font-size:10px; font-weight:bold; color: var(--text);">${daysText}</span>
+                            </div>
+                        </div>
+                    `;
+                });
+            } else {
+                alertsContainer.style.display = 'none';
+            }
+        }
+
+        function dismissAlert(key) {
+            dismissedAlerts.push(key);
+            checkAlerts();
+        }
+
+        function deleteContract(id) {
+            const hasAdminAccess = currentUser.isOwner || currentUser.isAdmin;
+            if (!hasAdminAccess) return;
+            if (confirm('هل أنت متأكد من حذف هذا العقد؟')) {
+                rentals = rentals.filter(r => r.id !== id);
+                localStorage.setItem('yesur_rentals', JSON.stringify(rentals));
+                renderAllCentersTables();
+                checkAlerts();
+            }
+        }
+
+        function logout() {
+            currentUser = null;
+            document.getElementById('authScreen').style.display = 'flex';
+            document.getElementById('appScreen').style.display = 'none';
+            document.getElementById('loginPass').value = '';
+        }
+
+        function exportCenterExcel(centerName) {
+            const centerContracts = rentals.filter(r => r.centerName === centerName);
+
+            if (centerContracts.length === 0) {
+                alert('لا توجد عقود لتصديرها لهذا المركز.');
+                return;
+            }
+
+            let csv = '\uFEFFالمحل,البراند,المستأجر,التواصل,المساحة,الإيجار السنوي,طريقة الدفع,تاريخ البداية,تاريخ النهاية,مضاف بواسطة,معدل بواسطة\n';
+            centerContracts.forEach(r => {
+                csv += `"${r.shopNumber}","${r.brandName}","${r.ownerName}","${r.ownerPhone}","${r.shopArea}","${r.rentAmount}","${r.paymentType}","${r.startDate}","${r.endDate || '-'}","${r.addedBy || '-'}","${r.editedBy || '-'}"\n`;
+            });
+
+            const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `يسر_عقود_${centerName}.csv`;
+            a.click();
+        }
+    </script>
+</body>
+</html>
