@@ -4,6 +4,9 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>منصة يسرُ - إدارة الإيجارات والمراكز التجارية</title>
+    <!-- مكتبات Firebase السحابية -->
+    <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-database-compat.js"></script>
     <style>
         :root {
             --primary: #0f766e;
@@ -14,9 +17,7 @@
             --bg: #f8fafc;
             --text: #1e293b;
         }
-        * {
-            box-sizing: border-box;
-        }
+        * { box-sizing: border-box; }
         body {
             font-family: Tahoma, sans-serif;
             background-color: var(--bg);
@@ -44,17 +45,8 @@
             flex-wrap: wrap;
             gap: 10px;
         }
-        .header-right {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
-        .header-left {
-            display: flex;
-            align-items: center;
-            gap: 6px;
-            flex-wrap: wrap;
-        }
+        .header-right { display: flex; align-items: center; gap: 10px; }
+        .header-left { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
         .menu-btn {
             font-size: 22px;
             background: none;
@@ -64,11 +56,7 @@
             padding: 0 5px;
             width: auto;
         }
-        .brand-logo {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
+        .brand-logo { display: flex; align-items: center; gap: 10px; }
         .logo-icon {
             width: 38px;
             height: 38px;
@@ -81,19 +69,12 @@
             font-size: 20px;
             font-weight: bold;
         }
-        .brand-title {
-            font-size: 18px;
-            font-weight: bold;
-            color: var(--primary);
-            margin: 0;
-        }
+        .brand-title { font-size: 18px; font-weight: bold; color: var(--primary); margin: 0; }
 
         .side-menu {
             position: fixed;
-            top: 0;
-            right: -300px;
-            width: 260px;
-            height: 100%;
+            top: 0; right: -300px;
+            width: 260px; height: 100%;
             background: #fff;
             box-shadow: -2px 0 10px rgba(0,0,0,0.1);
             transition: right 0.3s ease;
@@ -103,10 +84,7 @@
         .side-menu.open { right: 0; }
         .menu-overlay {
             position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
+            top: 0; left: 0; width: 100%; height: 100%;
             background: rgba(0,0,0,0.4);
             display: none;
             z-index: 999;
@@ -154,16 +132,8 @@
             grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
             gap: 12px;
         }
-        .form-group {
-            margin-bottom: 12px;
-            text-align: right;
-        }
-        label {
-            display: block;
-            margin-bottom: 5px;
-            font-weight: bold;
-            font-size: 13px;
-        }
+        .form-group { margin-bottom: 12px; text-align: right; }
+        label { display: block; margin-bottom: 5px; font-weight: bold; font-size: 13px; }
         input, select {
             width: 100%;
             padding: 9px;
@@ -187,76 +157,26 @@
         .btn-warning { background-color: var(--warning); padding: 5px 8px; font-size: 11px; width: auto; color: white; }
         .btn-info { background-color: var(--primary); padding: 5px 8px; font-size: 11px; width: auto; }
         
-        .action-btns {
-            display: flex;
-            gap: 4px;
-            justify-content: center;
-            align-items: center;
-        }
+        .action-btns { display: flex; gap: 4px; justify-content: center; align-items: center; }
+        .eye-btn { background: none; border: none; cursor: pointer; font-size: 15px; padding: 0 3px; margin-right: 3px; width: auto; }
 
-        .eye-btn {
-            background: none;
-            border: none;
-            cursor: pointer;
-            font-size: 15px;
-            padding: 0 3px;
-            margin-right: 3px;
-            width: auto;
-        }
-
-        .status-star {
-            font-size: 16px;
-            font-weight: bold;
-        }
+        .status-star { font-size: 16px; font-weight: bold; }
         .star-red { color: var(--danger); }
         .star-green { color: var(--success); }
 
-        .next-installment-box {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            gap: 2px;
-            font-size: 11px;
-        }
-        .next-inst-amount {
-            font-weight: bold;
-            color: var(--primary-dark);
-        }
-        .next-inst-date {
-            color: #64748b;
-            font-size: 10px;
-        }
-        .next-inst-days {
-            font-weight: bold;
-            font-size: 10px;
-            padding: 2px 5px;
-            border-radius: 4px;
-        }
+        .next-installment-box { display: flex; flex-direction: column; align-items: center; gap: 2px; font-size: 11px; }
+        .next-inst-amount { font-weight: bold; color: var(--primary-dark); }
+        .next-inst-date { color: #64748b; font-size: 10px; }
+        .next-inst-days { font-weight: bold; font-size: 10px; padding: 2px 5px; border-radius: 4px; }
         .days-normal { background: #e0f2fe; color: #0369a1; }
         .days-urgent { background: #fef2f2; color: var(--danger); }
         .days-due { background: #dcfce7; color: var(--success); }
         .days-done { background: #f1f5f9; color: #64748b; }
         .days-warning { background: #ffedd5; color: var(--warning); }
 
-        .alerts-header {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            margin-bottom: 8px;
-        }
-        .alerts-badge {
-            background-color: var(--warning);
-            color: white;
-            padding: 2px 6px;
-            border-radius: 10px;
-            font-size: 11px;
-            font-weight: bold;
-        }
-        .alerts-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
-            gap: 8px;
-        }
+        .alerts-header { display: flex; align-items: center; gap: 8px; margin-bottom: 8px; }
+        .alerts-badge { background-color: var(--warning); color: white; padding: 2px 6px; border-radius: 10px; font-size: 11px; font-weight: bold; }
+        .alerts-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: 8px; }
         .alert-card {
             background: #fff7ed;
             border: 1px solid #fed7aa;
@@ -269,166 +189,46 @@
             position: relative;
             height: 95px;
         }
-        .alert-card.urgent {
-            border-color: #fca5a5;
-            border-right-color: var(--danger);
-            background-color: #fef2f2;
-        }
+        .alert-card.urgent { border-color: #fca5a5; border-right-color: var(--danger); background-color: #fef2f2; }
         .alert-close {
-            position: absolute;
-            top: 2px;
-            left: 4px;
-            background: none;
-            border: none;
-            color: #94a3b8;
-            font-size: 14px;
-            font-weight: bold;
-            cursor: pointer;
-            width: auto;
-            padding: 0;
+            position: absolute; top: 2px; left: 4px;
+            background: none; border: none; color: #94a3b8;
+            font-size: 14px; font-weight: bold; cursor: pointer; width: auto; padding: 0;
         }
         .alert-close:hover { color: var(--danger); }
-        .alert-shop {
-            font-size: 13px;
-            font-weight: bold;
-            color: var(--primary-dark);
-            padding-left: 10px;
-            white-space: nowrap;
-            overflow: hidden;
-            text-overflow: ellipsis;
-        }
-        .alert-sub {
-            font-size: 10px;
-            color: #64748b;
-        }
+        .alert-shop { font-size: 13px; font-weight: bold; color: var(--primary-dark); padding-left: 10px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .alert-sub { font-size: 10px; color: #64748b; }
         .alert-days-box {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            background: rgba(255,255,255,0.9);
-            padding: 3px 6px;
-            border-radius: 4px;
-            border: 1px dashed #fdba74;
-            margin-top: 4px;
+            display: flex; justify-content: space-between; align-items: center;
+            background: rgba(255,255,255,0.9); padding: 3px 6px;
+            border-radius: 4px; border: 1px dashed #fdba74; margin-top: 4px;
         }
-        .alert-card.urgent .alert-days-box {
-            border-color: #fca5a5;
-        }
-        .alert-days-num {
-            font-size: 14px;
-            font-weight: bold;
-            color: var(--warning);
-        }
-        .alert-card.urgent .alert-days-num {
-            color: var(--danger);
-        }
+        .alert-card.urgent .alert-days-box { border-color: #fca5a5; }
+        .alert-days-num { font-size: 14px; font-weight: bold; color: var(--warning); }
+        .alert-card.urgent .alert-days-num { color: var(--danger); }
 
-        .table-responsive {
-            width: 100%;
-            overflow-x: auto;
-            -webkit-overflow-scrolling: touch;
-        }
-        table {
-            width: 100%;
-            min-width: 1000px;
-            border-collapse: collapse;
-            margin-top: 10px;
-            font-size: 12px;
-        }
-        th, td {
-            border: 1px solid #e2e8f0;
-            padding: 7px 4px;
-            text-align: center;
-            white-space: nowrap;
-        }
+        .table-responsive { width: 100%; overflow-x: auto; -webkit-overflow-scrolling: touch; }
+        table { width: 100%; min-width: 1000px; border-collapse: collapse; margin-top: 10px; font-size: 12px; }
+        th, td { border: 1px solid #e2e8f0; padding: 7px 4px; text-align: center; white-space: nowrap; }
         th { background-color: #f1f5f9; }
-        .badge {
-            padding: 4px 8px;
-            border-radius: 4px;
-            font-size: 11px;
-            color: white;
-            font-weight: bold;
-        }
+        .badge { padding: 4px 8px; border-radius: 4px; font-size: 11px; color: white; font-weight: bold; }
         .badge-paid { background-color: var(--success); }
         .badge-upcoming { background-color: var(--warning); }
         .badge-overdue { background-color: var(--danger); }
 
-        .timer-box {
-            font-family: monospace;
-            font-size: 10px;
-            direction: ltr;
-            background: #f1f5f9;
-            padding: 2px 4px;
-            border-radius: 4px;
-            display: inline-block;
-            font-weight: bold;
-        }
-
-        .actions-bar {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 8px;
-            flex-wrap: wrap;
-            gap: 10px;
-        }
-        .checkbox-group {
-            display: flex;
-            gap: 12px;
-            align-items: center;
-            margin-top: 6px;
-        }
-        .centers-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-            gap: 12px;
-            margin-top: 12px;
-        }
-        .center-card {
-            background: #f8fafc;
-            border: 1px solid #cbd5e1;
-            padding: 12px;
-            border-radius: 8px;
-            text-align: center;
-            position: relative;
-        }
-        .center-card-content {
-            cursor: pointer;
-            margin-bottom: 8px;
-        }
-        .center-card-actions {
-            display: flex;
-            justify-content: center;
-            gap: 6px;
-            border-top: 1px solid #e2e8f0;
-            padding-top: 6px;
-        }
-        .manual-installments-box {
-            background: #f1f5f9;
-            padding: 12px;
-            border-radius: 8px;
-            margin-top: 8px;
-            grid-column: 1 / -1;
-        }
+        .timer-box { font-family: monospace; font-size: 10px; direction: ltr; background: #f1f5f9; padding: 2px 4px; border-radius: 4px; display: inline-block; font-weight: bold; }
+        .actions-bar { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; flex-wrap: wrap; gap: 10px; }
+        .checkbox-group { display: flex; gap: 12px; align-items: center; margin-top: 6px; }
+        .centers-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 12px; margin-top: 12px; }
+        .center-card { background: #f8fafc; border: 1px solid #cbd5e1; padding: 12px; border-radius: 8px; text-align: center; position: relative; }
+        .center-card-content { cursor: pointer; margin-bottom: 8px; }
+        .center-card-actions { display: flex; justify-content: center; gap: 6px; border-top: 1px solid #e2e8f0; padding-top: 6px; }
+        .manual-installments-box { background: #f1f5f9; padding: 12px; border-radius: 8px; margin-top: 8px; grid-column: 1 / -1; }
         .modal {
-            display: none;
-            position: fixed;
-            top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(0,0,0,0.5);
-            z-index: 2000;
-            justify-content: center;
-            align-items: center;
-            padding: 10px;
+            display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.5); z-index: 2000; justify-content: center; align-items: center; padding: 10px;
         }
-        .modal-content {
-            background: white;
-            padding: 15px;
-            border-radius: 8px;
-            width: 100%;
-            max-width: 750px;
-            max-height: 85vh;
-            overflow-y: auto;
-        }
+        .modal-content { background: white; padding: 15px; border-radius: 8px; width: 100%; max-width: 750px; max-height: 85vh; overflow-y: auto; }
     </style>
 </head>
 <body>
@@ -480,9 +280,7 @@
                     </div>
                 </div>
                 <div class="header-left">
-                    <button onclick="exportAppData()" class="btn-excel" style="font-size: 11px; padding: 6px 10px;">💾 حفظ نسخة (JSON)</button>
-                    <button onclick="document.getElementById('importFile').click()" style="background-color: var(--primary); font-size: 11px; padding: 6px 10px;">📂 استرجاع البيانات</button>
-                    <input type="file" id="importFile" accept=".json" onchange="importAppData(event)" style="display: none;">
+                    <span id="syncStatus" style="font-size: 10px; color: var(--success); font-weight: bold;">● متصل بالسحاب</span>
                     <button onclick="logout()" class="btn-danger" style="font-size: 11px; padding: 6px 10px;">خروج</button>
                 </div>
             </header>
@@ -625,7 +423,6 @@
                     </form>
                 </div>
 
-                <!-- حاوية جداول المراكز التجارية تحت بعضها في الصفحة الرئيسية -->
                 <div id="centersTablesContainer"></div>
             </div>
         </div>
@@ -755,58 +552,56 @@
     </div>
 
     <script>
-        let users = JSON.parse(localStorage.getItem('yesur_users')) || [
+        // إعدادات Firebase
+        const firebaseConfig = {
+            apiKey: "AIzaSyDj_BoyeRyjtBy6lrGmfscoIVmHU74GWIk",
+            authDomain: "uosr-ed44d.firebaseapp.com",
+            projectId: "uosr-ed44d",
+            storageBucket: "uosr-ed44d.firebasestorage.app",
+            messagingSenderId: "1058267445871",
+            appId: "1:1058267445871:web:228dec08531f5430566b9a",
+            measurementId: "G-MWK7ESRGDV"
+        };
+        firebase.initializeApp(firebaseConfig);
+        const db = firebase.database();
+
+        let users = [
             { username: 'admin', password: '11121', isOwner: true, isAdmin: true, permissions: { add: true, pay: true, view: true } }
         ];
-        let centersList = JSON.parse(localStorage.getItem('yesur_centers')) || ['مجمع النخيل التجاري', 'مركز الروضة'];
-        let rentals = JSON.parse(localStorage.getItem('yesur_rentals')) || [];
+        let centersList = ['مجمع النخيل التجاري', 'مركز الروضة'];
+        let rentals = [];
         let dismissedAlerts = [];
         let currentUser = null;
         let activeModalContractId = null;
         let timerInterval = null;
 
-        function exportAppData() {
-            const data = {
+        // جام البيانات من السحاب ومزامنتها لحظياً
+        db.ref('yesur_data').on('value', (snapshot) => {
+            const data = snapshot.val();
+            if (data) {
+                if (data.users) users = data.users;
+                if (data.centers) centersList = data.centers;
+                if (data.rentals) rentals = data.rentals;
+            } else {
+                // حفظ الافتراضي أول مرة
+                syncToCloud();
+            }
+            populateCenterSelectOptions();
+            if (currentUser) {
+                renderCenters();
+                renderAllCentersTables();
+                checkAlerts();
+            }
+        });
+
+        function syncToCloud() {
+            db.ref('yesur_data').set({
                 users: users,
                 centers: centersList,
                 rentals: rentals
-            };
-            const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
-            const url = URL.createObjectURL(blob);
-            const a = document.createElement('a');
-            a.href = url;
-            a.download = `yesur_backup_${new Date().toISOString().slice(0, 10)}.json`;
-            a.click();
-            URL.revokeObjectURL(url);
-        }
-
-        function importAppData(event) {
-            const file = event.target.files[0];
-            if (!file) return;
-
-            const reader = new FileReader();
-            reader.onload = function(e) {
-                try {
-                    const data = JSON.parse(e.target.result);
-                    if (data.users && data.centers && data.rentals) {
-                        users = data.users;
-                        centersList = data.centers;
-                        rentals = data.rentals;
-
-                        localStorage.setItem('yesur_users', JSON.stringify(users));
-                        localStorage.setItem('yesur_centers', JSON.stringify(centersList));
-                        localStorage.setItem('yesur_rentals', JSON.stringify(rentals));
-
-                        alert('تم استرجاع البيانات بنجاح!');
-                        location.reload();
-                    } else {
-                        alert('ملف النسخة الاحتياطية غير صالح أو تالف.');
-                    }
-                } catch (err) {
-                    alert('حدث خطأ أثناء قراءة الملف.');
-                }
-            };
-            reader.readAsText(file);
+            }).catch((error) => {
+                console.error("خطأ في المزامنة السحابية: ", error);
+            });
         }
 
         function parseArabicNumbers(str) {
@@ -822,6 +617,7 @@
         function populateCenterSelectOptions() {
             const select = document.getElementById('centerNameSelect');
             const editSelect = document.getElementById('editCenterNameSelect');
+            if(!select || !editSelect) return;
             
             select.innerHTML = '<option value="">-- اختر المركز التجاري --</option>';
             editSelect.innerHTML = '<option value="">-- اختر المركز التجاري --</option>';
@@ -887,13 +683,11 @@
         });
 
         function toggleAdminPermissionCheckbox(checkbox) {
-            const normalPerms = document.getElementById('subNormalPermissions');
-            normalPerms.style.display = checkbox.checked ? 'none' : 'flex';
+            document.getElementById('subNormalPermissions').style.display = checkbox.checked ? 'none' : 'flex';
         }
 
         function toggleEditAdminCheckbox(checkbox) {
-            const normalPerms = document.getElementById('editNormalPermissions');
-            normalPerms.style.display = checkbox.checked ? 'none' : 'flex';
+            document.getElementById('editNormalPermissions').style.display = checkbox.checked ? 'none' : 'flex';
         }
 
         document.getElementById('addCenterForm').addEventListener('submit', function(e) {
@@ -909,7 +703,7 @@
             }
 
             centersList.push(name);
-            localStorage.setItem('yesur_centers', JSON.stringify(centersList));
+            syncToCloud();
             alert('تم حفظ المركز التجاري بنجاح.');
             this.reset();
             populateCenterSelectOptions();
@@ -931,7 +725,6 @@
             const index = centersList.indexOf(oldName);
             if (index !== -1) {
                 centersList[index] = trimmedName;
-                localStorage.setItem('yesur_centers', JSON.stringify(centersList));
             }
 
             rentals.forEach(r => {
@@ -939,7 +732,7 @@
                     r.centerName = trimmedName;
                 }
             });
-            localStorage.setItem('yesur_rentals', JSON.stringify(rentals));
+            syncToCloud();
 
             alert('تم تعديل اسم المركز التجاري بنجاح.');
             populateCenterSelectOptions();
@@ -958,7 +751,7 @@
 
             if (confirm(`هل أنت متأكد من حذف المركز التجاري (${centerName})؟`)) {
                 centersList = centersList.filter(c => c !== centerName);
-                localStorage.setItem('yesur_centers', JSON.stringify(centersList));
+                syncToCloud();
                 alert('تم حذف المركز بنجاح.');
                 populateCenterSelectOptions();
                 renderCenters();
@@ -990,7 +783,7 @@
                     view: true
                 }
             });
-            localStorage.setItem('yesur_users', JSON.stringify(users));
+            syncToCloud();
             alert('تم إنشاء الحساب بنجاح!');
             this.reset();
             document.getElementById('subNormalPermissions').style.display = 'flex';
@@ -1071,7 +864,7 @@
                 user.permissions.add = isAdmin ? true : document.getElementById('editPermAdd').checked;
                 user.permissions.pay = isAdmin ? true : document.getElementById('editPermPay').checked;
 
-                localStorage.setItem('yesur_users', JSON.stringify(users));
+                syncToCloud();
                 alert('تم تحديث بيانات الحساب بنجاح.');
                 closeEditUserModal();
                 renderUsersTable();
@@ -1081,7 +874,7 @@
         function deleteUser(username) {
             if (confirm(`هل أنت متأكد من حذف الحساب (${username})؟`)) {
                 users = users.filter(u => u.username !== username);
-                localStorage.setItem('yesur_users', JSON.stringify(users));
+                syncToCloud();
                 renderUsersTable();
             }
         }
@@ -1255,7 +1048,7 @@
             };
 
             rentals.push(newContract);
-            localStorage.setItem('yesur_rentals', JSON.stringify(rentals));
+            syncToCloud();
             renderAllCentersTables();
             checkAlerts();
             this.reset();
@@ -1357,7 +1150,7 @@
                     contract.installments = generateInstallmentsArray(startDateStr, endDateStr, pType, annualRent);
                 }
 
-                localStorage.setItem('yesur_rentals', JSON.stringify(rentals));
+                syncToCloud();
                 alert('تم تحديث كافة بيانات العقد والدفعات بنجاح.');
                 closeEditContractModal();
                 renderAllCentersTables();
@@ -1638,7 +1431,7 @@
                 const inst = contract.installments.find(i => i.id === instId);
                 if (inst) {
                     inst.status = (inst.status === 'تم السداد' || inst.status === 'مسدد') ? 'غير مسدد' : 'تم السداد';
-                    localStorage.setItem('yesur_rentals', JSON.stringify(rentals));
+                    syncToCloud();
                     renderModalInstallments(contract);
                     renderAllCentersTables();
                     checkAlerts();
@@ -1727,7 +1520,7 @@
             if (!hasAdminAccess) return;
             if (confirm('هل أنت متأكد من حذف هذا العقد؟')) {
                 rentals = rentals.filter(r => r.id !== id);
-                localStorage.setItem('yesur_rentals', JSON.stringify(rentals));
+                syncToCloud();
                 renderAllCentersTables();
                 checkAlerts();
             }
