@@ -575,7 +575,7 @@
         let activeModalContractId = null;
         let timerInterval = null;
 
-        // جام البيانات من السحاب ومزامنتها لحظياً
+        // جلب البيانات من السحاب ومزامنتها لحظياً
         db.ref('yesur_data').on('value', (snapshot) => {
             const data = snapshot.val();
             if (data) {
@@ -583,7 +583,6 @@
                 if (data.centers) centersList = data.centers;
                 if (data.rentals) rentals = data.rentals;
             } else {
-                // حفظ الافتراضي أول مرة
                 syncToCloud();
             }
             populateCenterSelectOptions();
