@@ -566,9 +566,9 @@
         const db = firebase.database();
 
         let users = [
-            { username: 'admin', password: '11121', isOwner: true, isAdmin: true, permissions: { add: true, pay: true, view: true } }
+            { username: 'saad', password: '11121', isOwner: true, isAdmin: true, permissions: { add: true, pay: true, view: true } }
         ];
-        let centersList = ['مجمع النخيل التجاري', 'مركز الروضة'];
+        let centersList = ['مجمع العرين التجاري'];
         let rentals = [];
         let dismissedAlerts = [];
         let currentUser = null;
@@ -618,8 +618,8 @@
             const editSelect = document.getElementById('editCenterNameSelect');
             if(!select || !editSelect) return;
             
-            select.innerHTML = '<option value="">-- اختر المركز التجاري --</option>';
-            editSelect.innerHTML = '<option value="">-- اختر المركز التجاري --</option>';
+            select.innerHTML = '<option value=""> اختر المركز التجاري </option>';
+            editSelect.innerHTML = '<option value=""> اختر المركز التجاري </option>';
             
             centersList.forEach(c => {
                 const opt = document.createElement('option');
