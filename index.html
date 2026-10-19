@@ -80,7 +80,6 @@
         .header-right { display: flex; align-items: center; gap: 12px; }
         .header-left { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
 
-        /* زر القائمة الجانبية برمز نصي واضح وبارز 100% */
         .menu-btn {
             background: var(--input-bg);
             border: 1.5px solid var(--primary);
@@ -423,7 +422,7 @@
         <hr style="border: 0; border-top: 1px solid var(--border-color); margin-bottom: 15px;">
         <div class="menu-item" onclick="showSection('main')">الصفحة الرئيسية</div>
         <div class="menu-item" onclick="showSection('centers')">مراكزي التجارية</div>
-        <div class="menu-item" onclick="showSection('statistics')">الاحصائيات والتقارير</div>
+        <div class="menu-item admin-only" id="menuStatistics" onclick="showSection('statistics')">الاحصائيات والتقارير</div>
         <div class="menu-item admin-only" id="menuSubAccount" onclick="showSection('subAccount')">إنشاء حساب تابع</div>
         <div class="menu-item admin-only" id="menuManageUsers" onclick="showSection('manageUsers')">إدارة الحسابات التابعة</div>
     </div>
@@ -460,7 +459,6 @@
         <div class="container">
             <header>
                 <div class="header-right">
-                    <!-- زر القائمة الجانبية برمز (☰) المضمون والواضح تماماً -->
                     <button class="menu-btn" onclick="toggleMenu()" title="القائمة الجانبية">☰</button>
                     <div class="brand-logo">
                         <div class="logo-icon">ي</div>
@@ -496,7 +494,7 @@
                 <div class="centers-grid" id="centersGrid"></div>
             </div>
 
-            <!-- قسم الإحصائيات -->
+            <!-- قسم الإحصائيات (خاص بالأدمن فقط) -->
             <div id="statisticsSection" style="display: none;">
                 <div class="card">
                     <h3 style="margin-top: 0; color: var(--primary); font-size: 16px; font-weight: 800; display: flex; align-items: center; gap: 8px;">
@@ -584,7 +582,7 @@
                     </div>
                 </div>
 
-                <!-- إحصائية المتعثرين برسم بياني عمودي أسفل القائمة مباشرة -->
+                <!-- إحصائية المتعثرين برسم بياني عمودي -->
                 <div class="card" style="border: 1px solid var(--danger); background-color: rgba(239, 68, 68, 0.02);">
                     <h4 style="color: var(--danger); margin-top:0; font-size: 15px; font-weight: 700; display: flex; align-items: center; gap: 8px;">
                         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="20" x2="18" y2="10"></line><line x1="12" y1="20" x2="12" y2="4"></line><line x1="6" y1="20" x2="6" y2="14"></line></svg>
@@ -650,7 +648,6 @@
 
             <!-- الصفحة الرئيسية -->
             <div id="mainSection">
-                <!-- بطاقات إشعارات احترافية محسنة ومزودة بأيقونة جرس هندسية SVG -->
                 <div class="card" id="alertsContainer" style="display: none;">
                     <div class="alerts-header">
                         <div class="bell-icon-wrapper">
@@ -929,7 +926,7 @@
         </div>
     </div>
 
-    <!-- نافذة تفاصيل الدفعات والمؤقت التنازلي -->
+    <!-- نافذة تفاصيل الدفعات -->
     <div class="modal" id="installmentsModal">
         <div class="modal-content">
             <h3 style="color: var(--primary); margin-top:0; font-size: 16px; font-weight: 800;" id="modalContractTitle">تفاصيل دفعات العقد</h3>
@@ -1110,6 +1107,14 @@
         }
 
         function showSection(section) {
+            if (section === 'statistics') {
+                const hasAdminAccess = currentUser && (currentUser.isOwner || currentUser.isAdmin);
+                if (!hasAdminAccess) {
+                    alert('هذا القسم خاص بمدير النظام فقط.');
+                    return;
+                }
+            }
+
             document.getElementById('mainSection').style.display = section === 'main' ? 'block' : 'none';
             document.getElementById('centersSection').style.display = section === 'centers' ? 'block' : 'none';
             document.getElementById('statisticsSection').style.display = section === 'statistics' ? 'block' : 'none';
@@ -1746,6 +1751,9 @@
         }
 
         function renderStatistics() {
+            const hasAdminAccess = currentUser && (currentUser.isOwner || currentUser.isAdmin);
+            if (!hasAdminAccess) return;
+
             const selectedCenter = document.getElementById('statCenterSelect').value;
             const filteredRentals = selectedCenter === 'الكل' 
                 ? rentals 
@@ -2140,7 +2148,8 @@
                     renderModalInstallments(contract);
                     renderAllCentersTables();
                     checkAlerts();
-                    renderStatistics();
+                    const hasAdminAccess = currentUser && (currentUser.isOwner || currentUser.isAdmin);
+                    if (hasAdminAccess) renderStatistics();
                 }
             }
         }
@@ -2155,7 +2164,8 @@
                     renderModalInstallments(contract);
                     renderAllCentersTables();
                     checkAlerts();
-                    renderStatistics();
+                    const hasAdminAccess = currentUser && (currentUser.isOwner || currentUser.isAdmin);
+                    if (hasAdminAccess) renderStatistics();
                 }
             }
         }
