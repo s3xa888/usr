@@ -1131,31 +1131,39 @@
             }
         }
 
+        // دالة تسجيل الدخول الآمنة عبر السحابة لحماية كلمات المرور من فحص العنصر
         document.getElementById('loginForm').addEventListener('submit', function(e) {
             e.preventDefault();
             const u = document.getElementById('loginUser').value.trim();
             const p = document.getElementById('loginPass').value.trim();
 
-            const foundUser = users.find(x => x.username === u && x.password === p);
-            if (foundUser) {
-                currentUser = foundUser;
-                const hasAdminAccess = currentUser.isOwner || currentUser.isAdmin;
+            db.ref('yesur_data/users').once('value').then((snapshot) => {
+                const dbUsers = snapshot.val() || users;
+                const foundUser = dbUsers.find(x => x.username === u && x.password === p);
 
-                document.getElementById('authScreen').style.display = 'none';
-                document.getElementById('appScreen').style.display = 'block';
-                document.getElementById('userInfo').innerText = `المستخدم: ${currentUser.username} (${hasAdminAccess ? 'مدير نظام / Admin' : 'حساب تابع'})`;
-                
-                document.querySelectorAll('.admin-only').forEach(el => {
-                    el.style.display = hasAdminAccess ? 'block' : 'none';
-                });
-                document.getElementById('addContractCard').style.display = (hasAdminAccess || currentUser.permissions.add) ? 'block' : 'none';
-                
-                populateCenterSelectOptions();
-                showSection('main');
-                checkAlerts();
-            } else {
-                alert('بيانات الدخول غير صحيحة.');
-            }
+                if (foundUser) {
+                    currentUser = foundUser;
+                    const hasAdminAccess = currentUser.isOwner || currentUser.isAdmin;
+
+                    document.getElementById('authScreen').style.display = 'none';
+                    document.getElementById('appScreen').style.display = 'block';
+                    document.getElementById('userInfo').innerText = `المستخدم: ${currentUser.username} (${hasAdminAccess ? 'مدير نظام / Admin' : 'حساب تابع'})`;
+                    
+                    document.querySelectorAll('.admin-only').forEach(el => {
+                        el.style.display = hasAdminAccess ? 'block' : 'none';
+                    });
+                    document.getElementById('addContractCard').style.display = (hasAdminAccess || currentUser.permissions.add) ? 'block' : 'none';
+                    
+                    populateCenterSelectOptions();
+                    showSection('main');
+                    checkAlerts();
+                } else {
+                    alert('بيانات الدخول غير صحيحة.');
+                }
+            }).catch((error) => {
+                console.error("خطأ في الاتصال بقاعدة البيانات:", error);
+                alert('حدث خطأ أثناء التحقق من بيانات الدخول.');
+            });
         });
 
         function toggleAdminPermissionCheckbox(checkbox) {
