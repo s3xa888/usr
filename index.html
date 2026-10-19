@@ -3,242 +3,427 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>منصة يسرُ - إدارة الإيجارات والمراكز التجارية</title>
+    <title>منصة يسرُ الاحترافية - إدارة الإيجارات والمراكز التجارية</title>
     <!-- مكتبات Firebase السحابية -->
     <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-database-compat.js"></script>
+    <!-- مكتبة الرسوم البيانية Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@300;400;500;700;900&display=swap" rel="stylesheet">
     <style>
         :root {
-            --primary: #0f766e;
-            --primary-dark: #115e59;
-            --success: #16a34a;
-            --warning: #f97316;
-            --danger: #dc2626;
-            --bg: #f8fafc;
-            --text: #1e293b;
+            --bg-base: #07090e;
+            --bg-card: #101622;
+            --bg-card-hover: #161f33;
+            --primary: #0ea5e9;
+            --primary-glow: rgba(14, 165, 233, 0.25);
+            --accent: #f59e0b;
+            --success: #10b981;
+            --danger: #ef4444;
+            --text-main: #f8fafc;
+            --text-muted: #94a3b8;
+            --border-color: #1e293b;
+            --input-bg: #0b0f17;
+            --radius-lg: 16px;
+            --radius-md: 10px;
+            --transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
         }
+
+        [data-theme="light"] {
+            --bg-base: #f1f5f9;
+            --bg-card: #ffffff;
+            --bg-card-hover: #f8fafc;
+            --primary: #0284c7;
+            --primary-glow: rgba(2, 132, 199, 0.15);
+            --accent: #d97706;
+            --success: #059669;
+            --danger: #dc2626;
+            --text-main: #0f172a;
+            --text-muted: #64748b;
+            --border-color: #e2e8f0;
+            --input-bg: #f8fafc;
+        }
+
         * { box-sizing: border-box; }
         body {
-            font-family: Tahoma, sans-serif;
-            background-color: var(--bg);
-            color: var(--text);
+            font-family: 'Tajawal', sans-serif;
+            background-color: var(--bg-base);
+            color: var(--text-main);
             margin: 0;
             padding: 0;
             width: 100%;
             overflow-x: hidden;
+            transition: var(--transition);
         }
+
         .container {
             width: 100%;
-            max-width: 980px;
+            max-width: 1200px;
             margin: 0 auto;
-            padding: 10px 15px;
+            padding: 15px;
         }
+
         header {
-            background: #fff;
-            padding: 12px 15px;
-            border-radius: 8px;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+            background: var(--bg-card);
+            padding: 14px 20px;
+            border-radius: var(--radius-lg);
+            box-shadow: 0 10px 30px -10px rgba(0,0,0,0.3);
             display: flex;
             justify-content: space-between;
             align-items: center;
-            margin-bottom: 15px;
+            margin-bottom: 20px;
             flex-wrap: wrap;
-            gap: 10px;
+            gap: 15px;
+            border: 1px solid var(--border-color);
         }
-        .header-right { display: flex; align-items: center; gap: 10px; }
-        .header-left { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
+
+        .header-right { display: flex; align-items: center; gap: 12px; }
+        .header-left { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+
+        /* زر القائمة الجانبية برمز نصي واضح وبارز 100% */
         .menu-btn {
-            font-size: 22px;
-            background: none;
-            border: none;
-            cursor: pointer;
+            background: var(--input-bg);
+            border: 1.5px solid var(--primary);
             color: var(--primary);
-            padding: 0 5px;
-            width: auto;
+            width: 44px;
+            height: 44px;
+            border-radius: var(--radius-md);
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+            font-weight: 900;
+            flex-shrink: 0;
+            transition: var(--transition);
+            box-shadow: 0 0 10px var(--primary-glow);
         }
-        .brand-logo { display: flex; align-items: center; gap: 10px; }
+        .menu-btn:hover { background: var(--primary); color: #fff; border-color: var(--primary); }
+
+        .brand-logo { display: flex; align-items: center; gap: 12px; }
         .logo-icon {
-            width: 38px;
-            height: 38px;
-            background: linear-gradient(135deg, var(--primary), #14b8a6);
+            width: 42px;
+            height: 42px;
+            background: linear-gradient(135deg, var(--primary), #6366f1);
             color: white;
-            border-radius: 8px;
+            border-radius: 12px;
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 20px;
-            font-weight: bold;
+            font-size: 22px;
+            font-weight: 900;
+            box-shadow: 0 8px 20px var(--primary-glow);
         }
-        .brand-title { font-size: 18px; font-weight: bold; color: var(--primary); margin: 0; }
+        .brand-title { font-size: 18px; font-weight: 800; color: var(--text-main); margin: 0; letter-spacing: -0.5px; }
+
+        .theme-toggle-btn {
+            background: var(--input-bg);
+            color: var(--text-main);
+            border: 1px solid var(--border-color);
+            padding: 8px 14px;
+            border-radius: var(--radius-md);
+            cursor: pointer;
+            font-size: 12px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-weight: 700;
+            transition: var(--transition);
+        }
+        .theme-toggle-btn:hover { border-color: var(--primary); }
 
         .side-menu {
             position: fixed;
-            top: 0; right: -300px;
-            width: 260px; height: 100%;
-            background: #fff;
-            box-shadow: -2px 0 10px rgba(0,0,0,0.1);
-            transition: right 0.3s ease;
+            top: 0; right: -350px;
+            width: 280px; height: 100%;
+            background: var(--bg-card);
+            box-shadow: -10px 0 40px rgba(0,0,0,0.5);
+            transition: right 0.4s cubic-bezier(0.16, 1, 0.3, 1);
             z-index: 1000;
             padding: 20px;
+            border-left: 1px solid var(--border-color);
         }
         .side-menu.open { right: 0; }
         .menu-overlay {
             position: fixed;
             top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(0,0,0,0.4);
+            background: rgba(0,0,0,0.6);
+            backdrop-filter: blur(5px);
             display: none;
             z-index: 999;
         }
         .menu-overlay.show { display: block; }
         .menu-item {
-            padding: 12px 15px;
+            padding: 12px 16px;
             margin-bottom: 8px;
-            border-radius: 6px;
+            border-radius: var(--radius-md);
             cursor: pointer;
-            font-weight: bold;
-            color: var(--text);
-            background-color: #f1f5f9;
+            font-weight: 700;
+            color: var(--text-main);
+            background-color: var(--input-bg);
+            border: 1px solid var(--border-color);
+            transition: var(--transition);
         }
-        .menu-item:hover { background-color: #e2e8f0; color: var(--primary); }
+        .menu-item:hover { background-color: var(--primary); color: white; border-color: var(--primary); transform: translateX(-4px); }
 
         #authScreen {
             display: flex;
             justify-content: center;
             align-items: center;
             height: 100vh;
-            background: linear-gradient(135deg, #0f766e, #14b8a6);
+            background: radial-gradient(circle at center, #1e293b 0%, #07090e 100%);
             padding: 15px;
         }
         .auth-card {
-            background: #fff;
-            padding: 25px;
-            border-radius: 12px;
+            background: var(--bg-card);
+            padding: 30px 20px;
+            border-radius: 20px;
             width: 100%;
-            max-width: 380px;
+            max-width: 400px;
             text-align: center;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.7);
+            border: 1px solid var(--border-color);
         }
         #appScreen { display: none; }
+
         .card {
-            background: #fff;
-            padding: 15px;
-            border-radius: 8px;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
-            margin-bottom: 15px;
+            background: var(--bg-card);
+            padding: 20px;
+            border-radius: var(--radius-lg);
+            box-shadow: 0 10px 30px -10px rgba(0,0,0,0.2);
+            margin-bottom: 20px;
             width: 100%;
             overflow: hidden;
+            border: 1px solid var(--border-color);
+            transition: var(--transition);
         }
+        .card:hover { border-color: rgba(14, 165, 233, 0.3); }
+
         .form-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
-            gap: 12px;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 14px;
         }
-        .form-group { margin-bottom: 12px; text-align: right; }
-        label { display: block; margin-bottom: 5px; font-weight: bold; font-size: 13px; }
+        .form-group { margin-bottom: 14px; text-align: right; }
+        label { display: block; margin-bottom: 6px; font-weight: 700; font-size: 12px; color: var(--text-muted); }
         input, select {
             width: 100%;
-            padding: 9px;
-            border: 1px solid #cbd5e1;
-            border-radius: 6px;
+            padding: 10px 14px;
+            border: 1px solid var(--border-color);
+            background-color: var(--input-bg);
+            color: var(--text-main);
+            border-radius: var(--radius-md);
             font-size: 13px;
+            font-family: 'Tajawal', sans-serif;
+            direction: rtl;
+            text-align: right;
+            transition: var(--transition);
+        }
+        input:focus, select:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 4px var(--primary-glow);
+        }
+        input[readonly] {
+            background-color: rgba(255,255,255,0.02);
+            cursor: not-allowed;
+            opacity: 0.7;
         }
         button {
-            background-color: var(--primary);
+            background: linear-gradient(135deg, var(--primary), #0284c7);
             color: white;
             border: none;
-            padding: 9px 16px;
-            border-radius: 6px;
+            padding: 10px 20px;
+            border-radius: var(--radius-md);
             cursor: pointer;
             font-size: 13px;
-            font-weight: bold;
+            font-weight: 700;
+            font-family: 'Tajawal', sans-serif;
+            box-shadow: 0 4px 15px var(--primary-glow);
+            transition: var(--transition);
         }
-        button:hover { background-color: var(--primary-dark); }
-        .btn-excel { background-color: var(--success); width: auto; }
-        .btn-danger { background-color: var(--danger); padding: 5px 8px; font-size: 11px; width: auto; }
-        .btn-warning { background-color: var(--warning); padding: 5px 8px; font-size: 11px; width: auto; color: white; }
-        .btn-info { background-color: var(--primary); padding: 5px 8px; font-size: 11px; width: auto; }
+        button:hover { opacity: 0.9; transform: translateY(-2px); box-shadow: 0 6px 20px var(--primary-glow); }
         
-        .action-btns { display: flex; gap: 4px; justify-content: center; align-items: center; }
-        .eye-btn { background: none; border: none; cursor: pointer; font-size: 15px; padding: 0 3px; margin-right: 3px; width: auto; }
+        .btn-excel { background: linear-gradient(135deg, var(--success), #047857); width: auto; box-shadow: 0 4px 15px rgba(16, 185, 129, 0.2); }
+        .btn-danger { background: var(--danger); padding: 6px 10px; font-size: 11px; width: auto; box-shadow: none; border-radius: 6px; }
+        .btn-warning { background: #d97706; padding: 6px 10px; font-size: 11px; width: auto; color: white; box-shadow: none; border-radius: 6px; }
+        .btn-info { background: var(--primary); padding: 6px 10px; font-size: 11px; width: auto; box-shadow: none; border-radius: 6px; }
+        
+        .action-btns { display: flex; gap: 6px; justify-content: center; align-items: center; }
+        
+        .password-container { position: relative; display: flex; align-items: center; }
+        .password-toggle-btn, .table-eye-btn {
+            background: none;
+            border: none;
+            cursor: pointer;
+            color: var(--text-muted);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: var(--transition);
+        }
+        .password-toggle-btn {
+            position: absolute;
+            left: 10px;
+            font-size: 15px;
+            padding: 4px;
+        }
+        .table-eye-btn {
+            padding: 2px 4px;
+            display: inline-flex;
+            vertical-align: middle;
+            margin-right: 4px;
+        }
+        .password-toggle-btn:hover, .table-eye-btn:hover { color: var(--primary); }
 
-        .status-star { font-size: 16px; font-weight: bold; }
+        .status-star { font-size: 18px; font-weight: bold; }
         .star-red { color: var(--danger); }
         .star-green { color: var(--success); }
 
-        .next-installment-box { display: flex; flex-direction: column; align-items: center; gap: 2px; font-size: 11px; }
-        .next-inst-amount { font-weight: bold; color: var(--primary-dark); }
-        .next-inst-date { color: #64748b; font-size: 10px; }
-        .next-inst-days { font-weight: bold; font-size: 10px; padding: 2px 5px; border-radius: 4px; }
-        .days-normal { background: #e0f2fe; color: #0369a1; }
-        .days-urgent { background: #fef2f2; color: var(--danger); }
-        .days-due { background: #dcfce7; color: var(--success); }
-        .days-done { background: #f1f5f9; color: #64748b; }
-        .days-warning { background: #ffedd5; color: var(--warning); }
+        .next-installment-box { display: flex; flex-direction: column; align-items: center; gap: 3px; font-size: 11px; }
+        .next-inst-amount { font-weight: 800; color: var(--primary); }
+        .next-inst-date { color: var(--text-muted); font-size: 10px; }
+        .next-inst-days { font-weight: 700; font-size: 10px; padding: 3px 6px; border-radius: 6px; }
+        .days-normal { background: rgba(16, 185, 129, 0.15); color: var(--success); }
+        .days-urgent { background: rgba(239, 68, 68, 0.15); color: var(--danger); }
+        .days-due { background: rgba(16, 185, 129, 0.2); color: var(--success); }
+        .days-done { background: var(--border-color); color: var(--text-muted); }
 
-        .alerts-header { display: flex; align-items: center; gap: 8px; margin-bottom: 8px; }
-        .alerts-badge { background-color: var(--warning); color: white; padding: 2px 6px; border-radius: 10px; font-size: 11px; font-weight: bold; }
-        .alerts-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: 8px; }
+        .alerts-header { display: flex; align-items: center; gap: 10px; margin-bottom: 14px; }
+        .bell-icon-wrapper {
+            width: 36px; height: 36px;
+            background: linear-gradient(135deg, var(--accent), #d97706);
+            color: white; border-radius: 10px;
+            display: flex; align-items: center; justify-content: center;
+            box-shadow: 0 4px 12px rgba(245, 158, 11, 0.3);
+            animation: ringBell 2s infinite ease-in-out;
+        }
+        @keyframes ringBell {
+            0% { transform: rotate(0); }
+            15% { transform: rotate(14deg); }
+            30% { transform: rotate(-14deg); }
+            45% { transform: rotate(10deg); }
+            60% { transform: rotate(-10deg); }
+            75% { transform: rotate(4deg); }
+            100% { transform: rotate(0); }
+        }
+        .alerts-badge { background-color: var(--accent); color: white; padding: 3px 10px; border-radius: 20px; font-size: 12px; font-weight: 800; }
+        
+        .alerts-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 12px; }
         .alert-card {
-            background: #fff7ed;
-            border: 1px solid #fed7aa;
-            border-right: 4px solid var(--warning);
-            border-radius: 8px;
-            padding: 8px;
+            background: var(--input-bg);
+            border: 1px solid var(--border-color);
+            border-right: 4px solid var(--success);
+            border-radius: var(--radius-md);
+            padding: 14px;
             display: flex;
             flex-direction: column;
             justify-content: space-between;
             position: relative;
-            height: 95px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+            transition: var(--transition);
         }
-        .alert-card.urgent { border-color: #fca5a5; border-right-color: var(--danger); background-color: #fef2f2; }
+        .alert-card:hover { transform: translateY(-2px); border-color: var(--primary); }
+        .alert-card.urgent { border-right-color: var(--danger); background: linear-gradient(135deg, var(--input-bg), rgba(239, 68, 68, 0.04)); }
+        
         .alert-close {
-            position: absolute; top: 2px; left: 4px;
-            background: none; border: none; color: #94a3b8;
-            font-size: 14px; font-weight: bold; cursor: pointer; width: auto; padding: 0;
+            position: absolute; top: 6px; left: 8px;
+            background: rgba(255,255,255,0.05); border: 1px solid var(--border-color);
+            color: var(--text-muted); font-size: 12px; font-weight: bold; cursor: pointer;
+            width: 20px; height: 20px; border-radius: 50%; display: flex; align-items: center; justify-content: center;
+            transition: var(--transition);
         }
-        .alert-close:hover { color: var(--danger); }
-        .alert-shop { font-size: 13px; font-weight: bold; color: var(--primary-dark); padding-left: 10px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-        .alert-sub { font-size: 10px; color: #64748b; }
+        .alert-close:hover { background: var(--danger); color: white; border-color: var(--danger); }
+        
+        .alert-top { display: flex; align-items: center; gap: 8px; margin-bottom: 8px; padding-left: 15px; }
+        .alert-icon-symbol { display: flex; align-items: center; justify-content: center; }
+        .alert-shop { font-size: 13px; font-weight: 800; color: var(--text-main); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .alert-sub { font-size: 10px; color: var(--text-muted); }
+        
         .alert-days-box {
             display: flex; justify-content: space-between; align-items: center;
-            background: rgba(255,255,255,0.9); padding: 3px 6px;
-            border-radius: 4px; border: 1px dashed #fdba74; margin-top: 4px;
+            background: var(--bg-card); padding: 6px 10px;
+            border-radius: 8px; border: 1px solid var(--border-color); margin-top: 4px;
         }
-        .alert-card.urgent .alert-days-box { border-color: #fca5a5; }
-        .alert-days-num { font-size: 14px; font-weight: bold; color: var(--warning); }
+        .alert-days-num { font-size: 13px; font-weight: 800; color: var(--success); }
         .alert-card.urgent .alert-days-num { color: var(--danger); }
 
         .table-responsive { width: 100%; overflow-x: auto; -webkit-overflow-scrolling: touch; }
-        table { width: 100%; min-width: 1000px; border-collapse: collapse; margin-top: 10px; font-size: 12px; }
-        th, td { border: 1px solid #e2e8f0; padding: 7px 4px; text-align: center; white-space: nowrap; }
-        th { background-color: #f1f5f9; }
-        .badge { padding: 4px 8px; border-radius: 4px; font-size: 11px; color: white; font-weight: bold; }
+        
+        table { width: 100%; min-width: 1100px; border-collapse: separate; border-spacing: 0; margin-top: 12px; font-size: 12px; }
+        th, td { border-bottom: 1px solid var(--border-color); border-right: 1px solid var(--border-color); padding: 10px 8px; text-align: center; white-space: nowrap; color: var(--text-main); }
+        th:first-child, td:first-child { border-right: none; }
+        th { background-color: var(--input-bg); font-weight: 800; color: var(--text-muted); font-size: 11px; text-transform: uppercase; }
+        tr:hover td { background-color: var(--bg-card-hover); }
+
+        .auto-table { width: 100%; min-width: auto; table-layout: auto; }
+        .auto-table th, .auto-table td { padding: 10px 12px; }
+        
+        .badge { padding: 4px 10px; border-radius: 6px; font-size: 11px; color: white; font-weight: 700; }
         .badge-paid { background-color: var(--success); }
-        .badge-upcoming { background-color: var(--warning); }
+        .badge-upcoming { background-color: var(--success); }
         .badge-overdue { background-color: var(--danger); }
 
-        .timer-box { font-family: monospace; font-size: 10px; direction: ltr; background: #f1f5f9; padding: 2px 4px; border-radius: 4px; display: inline-block; font-weight: bold; }
-        .actions-bar { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; flex-wrap: wrap; gap: 10px; }
-        .checkbox-group { display: flex; gap: 12px; align-items: center; margin-top: 6px; }
-        .centers-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 12px; margin-top: 12px; }
-        .center-card { background: #f8fafc; border: 1px solid #cbd5e1; padding: 12px; border-radius: 8px; text-align: center; position: relative; }
-        .center-card-content { cursor: pointer; margin-bottom: 8px; }
-        .center-card-actions { display: flex; justify-content: center; gap: 6px; border-top: 1px solid #e2e8f0; padding-top: 6px; }
-        .manual-installments-box { background: #f1f5f9; padding: 12px; border-radius: 8px; margin-top: 8px; grid-column: 1 / -1; }
+        .timer-box { font-family: monospace; font-size: 11px; direction: ltr; background: var(--input-bg); color: var(--primary); padding: 3px 6px; border-radius: 6px; display: inline-block; font-weight: 700; border: 1px solid var(--border-color); }
+        .actions-bar { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; flex-wrap: wrap; gap: 10px; }
+        
+        .checkbox-group { display: flex; gap: 12px; align-items: center; margin-top: 8px; }
+        
+        .check-container {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 11px;
+            font-weight: 700;
+            cursor: pointer;
+            user-select: none;
+            background: var(--input-bg);
+            padding: 5px 10px;
+            border-radius: 6px;
+            border: 1px solid var(--border-color);
+            white-space: nowrap;
+        }
+        .check-container input {
+            width: auto;
+            margin: 0;
+            cursor: pointer;
+        }
+
+        .centers-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 14px; margin-top: 12px; }
+        .center-card { background: var(--input-bg); border: 1px solid var(--border-color); padding: 16px; border-radius: var(--radius-lg); text-align: center; position: relative; transition: var(--transition); }
+        .center-card:hover { border-color: var(--primary); transform: translateY(-2px); }
+        .center-card-content { cursor: pointer; margin-bottom: 10px; }
+        .center-card-actions { display: flex; justify-content: center; gap: 6px; border-top: 1px solid var(--border-color); padding-top: 10px; }
+        .manual-installments-box { background: var(--input-bg); padding: 15px; border-radius: var(--radius-md); margin-top: 10px; grid-column: 1 / -1; border: 1px solid var(--border-color); }
+
         .modal {
             display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(0,0,0,0.5); z-index: 2000; justify-content: center; align-items: center; padding: 10px;
+            background: rgba(0,0,0,0.7); backdrop-filter: blur(8px); z-index: 2000; justify-content: center; align-items: center; padding: 15px;
         }
-        .modal-content { background: white; padding: 15px; border-radius: 8px; width: 100%; max-width: 750px; max-height: 85vh; overflow-y: auto; }
+        .modal-content { background: var(--bg-card); padding: 24px; border-radius: 20px; width: 100%; max-width: 780px; max-height: 85vh; overflow-y: auto; border: 1px solid var(--border-color); box-shadow: 0 25px 60px rgba(0,0,0,0.5); }
+        
+        .installments-table { width: 100%; min-width: 650px; table-layout: auto; }
+        .installments-table th, .installments-table td { padding: 10px 10px; font-size: 11px; }
+
+        @media (max-width: 768px) {
+            .container { padding: 10px; }
+            header { padding: 10px 14px; }
+            .brand-title { font-size: 15px; }
+            .card { padding: 14px; }
+            .form-grid { grid-template-columns: 1fr; }
+            table { font-size: 11px; min-width: 950px; }
+        }
     </style>
 </head>
-<body>
+<body data-theme="dark">
 
     <div class="menu-overlay" id="menuOverlay" onclick="toggleMenu()"></div>
     <div class="side-menu" id="sideMenu">
-        <h3 style="color: var(--primary); margin-top: 0; font-size: 16px;">القائمة الرئيسية</h3>
-        <hr style="border: 0; border-top: 1px solid #e2e8f0; margin-bottom: 12px;">
+        <h3 style="color: var(--primary); margin-top: 0; font-size: 16px; font-weight: 800;">قائمة النظام</h3>
+        <hr style="border: 0; border-top: 1px solid var(--border-color); margin-bottom: 15px;">
         <div class="menu-item" onclick="showSection('main')">الصفحة الرئيسية</div>
         <div class="menu-item" onclick="showSection('centers')">مراكزي التجارية</div>
+        <div class="menu-item" onclick="showSection('statistics')">الاحصائيات والتقارير</div>
         <div class="menu-item admin-only" id="menuSubAccount" onclick="showSection('subAccount')">إنشاء حساب تابع</div>
         <div class="menu-item admin-only" id="menuManageUsers" onclick="showSection('manageUsers')">إدارة الحسابات التابعة</div>
     </div>
@@ -246,11 +431,11 @@
     <!-- تسجيل الدخول -->
     <div id="authScreen">
         <div class="auth-card">
-            <div class="brand-logo" style="justify-content: center; margin-bottom: 12px;">
+            <div class="brand-logo" style="justify-content: center; margin-bottom: 16px;">
                 <div class="logo-icon">ي</div>
                 <div class="brand-title" style="font-size: 22px;">منصة يُسر</div>
             </div>
-            <p style="color: #64748b; margin-bottom: 15px; font-size: 13px;">نظام متابعه الدفعات الايجارية في المراكز التجارية </p>
+            <p style="color: var(--text-muted); margin-bottom: 20px; font-size: 12px;">نظام المؤسسات لإدارة الإيجارات والمراكز التجارية</p>
             <form id="loginForm">
                 <div class="form-group">
                     <label>اسم المستخدم:</label>
@@ -258,9 +443,14 @@
                 </div>
                 <div class="form-group">
                     <label>كلمة المرور:</label>
-                    <input type="password" id="loginPass" required placeholder="أدخل كلمة المرور">
+                    <div class="password-container">
+                        <input type="password" id="loginPass" required placeholder="أدخل كلمة المرور" style="padding-left: 38px;">
+                        <button type="button" class="password-toggle-btn" onclick="togglePasswordInput('loginPass', this)" title="إظهار/إخفاء كلمة المرور">
+                            <svg id="loginPassIcon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>
+                        </button>
+                    </div>
                 </div>
-                <button type="submit" style="width: 100%; margin-top: 8px;">دخول للنظام</button>
+                <button type="submit" style="width: 100%; margin-top: 10px; padding: 12px; font-size: 14px;">تسجيل الدخول الآمن</button>
             </form>
         </div>
     </div>
@@ -270,40 +460,145 @@
         <div class="container">
             <header>
                 <div class="header-right">
-                    <button class="menu-btn" onclick="toggleMenu()">☰</button>
+                    <!-- زر القائمة الجانبية برمز (☰) المضمون والواضح تماماً -->
+                    <button class="menu-btn" onclick="toggleMenu()" title="القائمة الجانبية">☰</button>
                     <div class="brand-logo">
                         <div class="logo-icon">ي</div>
                         <div>
                             <div class="brand-title">منصة يُسر للمتابعة</div>
-                            <span id="userInfo" style="font-size: 11px; color: #64748b; display: block;"></span>
+                            <span id="userInfo" style="font-size: 10px; color: var(--text-muted); display: block;"></span>
                         </div>
                     </div>
                 </div>
                 <div class="header-left">
-                    <span id="syncStatus" style="font-size: 10px; color: var(--success); font-weight: bold;">● متصل اونلاين</span>
-                    <button onclick="logout()" class="btn-danger" style="font-size: 11px; padding: 6px 10px;">خروج</button>
+                    <button class="theme-toggle-btn" onclick="toggleTheme()" id="themeBtn" title="تغيير المظهر">
+                        <svg id="themeIconSvg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="5"></circle><line x1="12" y1="1" x2="12" y2="3"></line><line x1="12" y1="21" x2="12" y2="23"></line><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line><line x1="1" y1="12" x2="3" y2="12"></line><line x1="21" y1="12" x2="23" y2="12"></line><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line></svg>
+                        <span id="themeBtnText">الوضع النهاري</span>
+                    </button>
+                    <span id="syncStatus" style="font-size: 10px; color: var(--success); font-weight: 800; background: rgba(16, 185, 129, 0.1); padding: 5px 10px; border-radius: 6px;">● متصل بالسحابة</span>
+                    <button onclick="logout()" class="btn-danger" style="font-size: 11px; padding: 8px 12px;">خروج</button>
                 </div>
             </header>
 
             <!-- مراكزي التجارية -->
             <div class="card" id="centersSection" style="display: none;">
-                <h3 style="margin-top: 0; color: var(--primary); font-size: 16px;">مراكزي التجارية</h3>
+                <h3 style="margin-top: 0; color: var(--primary); font-size: 16px; font-weight: 800;">مراكزي التجارية</h3>
                 
-                <div id="addCenterBox" class="admin-only" style="background: #f1f5f9; padding: 12px; border-radius: 8px; margin-bottom: 15px;">
-                    <h4 style="margin-top: 0; color: var(--primary-dark); font-size: 14px;">إضافة مركز تجاري جديد</h4>
-                    <form id="addCenterForm" style="display: flex; gap: 8px; flex-wrap: wrap;">
+                <div id="addCenterBox" class="admin-only" style="background: var(--input-bg); border: 1px solid var(--border-color); padding: 16px; border-radius: var(--radius-md); margin-bottom: 16px;">
+                    <h4 style="margin-top: 0; color: var(--text-main); font-size: 14px; font-weight: 700;">إضافة مركز تجاري جديد</h4>
+                    <form id="addCenterForm" style="display: flex; gap: 10px; flex-wrap: wrap;">
                         <input type="text" id="newCenterName" required placeholder="اسم المركز التجاري الجديد" style="flex: 1; min-width: 180px;">
                         <button type="submit" style="width: auto;">حفظ المركز</button>
                     </form>
                 </div>
 
-                <p style="color: #64748b; font-size: 13px;">إدارة المراكز التجارية وتعديلها:</p>
+                <p style="color: var(--text-muted); font-size: 12px;">إدارة المراكز التجارية وتعديلها:</p>
                 <div class="centers-grid" id="centersGrid"></div>
             </div>
 
+            <!-- قسم الإحصائيات -->
+            <div id="statisticsSection" style="display: none;">
+                <div class="card">
+                    <h3 style="margin-top: 0; color: var(--primary); font-size: 16px; font-weight: 800; display: flex; align-items: center; gap: 8px;">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="20" x2="18" y2="10"></line><line x1="12" y1="20" x2="12" y2="4"></line><line x1="6" y1="20" x2="6" y2="14"></line></svg>
+                        لوحة الإحصائيات والتقارير
+                    </h3>
+                    <div class="form-group" style="max-width: 300px; margin-bottom: 0;">
+                        <label>اختر المركز التجاري للإحصائيات:</label>
+                        <select id="statCenterSelect" onchange="renderStatistics()">
+                            <option value="الكل">جميع المراكز التجارية</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="card" style="max-width: 800px; margin: 0 auto 16px auto;">
+                    <h4 style="color: var(--text-main); margin-top:0; font-size: 15px; font-weight: 700;">إجمالي دخل كل مركز تجاري</h4>
+                    <div class="table-responsive">
+                        <table class="auto-table">
+                            <thead>
+                                <tr>
+                                    <th>المركز التجاري</th>
+                                    <th>عدد العقود</th>
+                                    <th>إجمالي الدخل السنوي</th>
+                                    <th>إجمالي دخل العقود بمددها</th>
+                                </tr>
+                            </thead>
+                            <tbody id="centersIncomeTableBody"></tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 16px;">
+                    <div class="card">
+                        <h4 style="color: var(--text-main); margin-top:0; font-size: 14px; font-weight: 700;">توزيع الأنشطة التجارية</h4>
+                        <div style="max-width: 260px; margin: 0 auto;">
+                            <canvas id="activitiesChart"></canvas>
+                        </div>
+                    </div>
+                    <div class="card">
+                        <h4 style="color: var(--text-main); margin-top:0; font-size: 14px; font-weight: 700;">توزيع البراندات</h4>
+                        <div style="max-width: 260px; margin: 0 auto;">
+                            <canvas id="brandsChart"></canvas>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <h4 style="color: var(--text-main); margin-top:0; font-size: 15px; font-weight: 700;">الإحصائيات السنوية وإجمالي الأرباح للعقود</h4>
+                    <div class="table-responsive">
+                        <table class="auto-table">
+                            <thead>
+                                <tr>
+                                    <th>البراند / النشاط</th>
+                                    <th>المركز التجاري</th>
+                                    <th>الإيجار السنوي</th>
+                                    <th>مدة العقد (سنوات)</th>
+                                    <th>إجمالي ربح العقد كاملاً</th>
+                                </tr>
+                            </thead>
+                            <tbody id="yearlyProfitTableBody"></tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- قائمة المتعثرين -->
+                <div class="card" style="border: 1px solid var(--danger); background-color: rgba(239, 68, 68, 0.03);">
+                    <h4 style="color: var(--danger); margin-top:0; font-size: 15px; font-weight: 700; display: flex; align-items: center; gap: 8px;">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"></path><line x1="12" y1="9" x2="12" y2="13"></line><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>
+                        المتعثرون
+                    </h4>
+                    <div class="table-responsive">
+                        <table class="auto-table">
+                            <thead>
+                                <tr>
+                                    <th>اسم البراند</th>
+                                    <th>نوع النشاط</th>
+                                    <th>اسم الشخص</th>
+                                    <th>رقم الجوال</th>
+                                    <th>عدد الدفعات المتأخرة</th>
+                                    <th>المركز التجاري</th>
+                                </tr>
+                            </thead>
+                            <tbody id="overdueActivitiesTableBody"></tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- إحصائية المتعثرين برسم بياني عمودي أسفل القائمة مباشرة -->
+                <div class="card" style="border: 1px solid var(--danger); background-color: rgba(239, 68, 68, 0.02);">
+                    <h4 style="color: var(--danger); margin-top:0; font-size: 15px; font-weight: 700; display: flex; align-items: center; gap: 8px;">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="20" x2="18" y2="10"></line><line x1="12" y1="20" x2="12" y2="4"></line><line x1="6" y1="20" x2="6" y2="14"></line></svg>
+                        إحصائية الأنشطة الأكثر تعثراً
+                    </h4>
+                    <div style="max-width: 600px; margin: 0 auto; min-height: 250px;">
+                        <canvas id="overdueChart"></canvas>
+                    </div>
+                </div>
+            </div>
+
             <!-- إنشاء حساب تابع -->
-            <div class="card" id="subAccountSection" style="display: none; border: 1px solid #14b8a6; background-color: #f0fdfa;">
-                <h3 style="margin-top: 0; color: var(--primary); font-size: 16px;">إنشاء حساب تابع جديد والتحكم بالصلاحيات</h3>
+            <div class="card" id="subAccountSection" style="display: none; border: 1px solid var(--primary);">
+                <h3 style="margin-top: 0; color: var(--primary); font-size: 16px; font-weight: 800;">إنشاء حساب تابع جديد والتحكم بالصلاحيات</h3>
                 <form id="subAccountForm">
                     <div class="form-grid">
                         <div class="form-group">
@@ -312,28 +607,33 @@
                         </div>
                         <div class="form-group">
                             <label>كلمة المرور:</label>
-                            <input type="password" id="subPass" required placeholder="أنشئ كلمة مرور">
+                            <div class="password-container">
+                                <input type="password" id="subPass" required placeholder="أنشئ كلمة مرور" style="padding-left: 38px;">
+                                <button type="button" class="password-toggle-btn" onclick="togglePasswordInput('subPass', this)" title="إظهار/إخفاء كلمة المرور">
+                                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>
+                                </button>
+                            </div>
                         </div>
                         <div class="form-group" style="grid-column: span 2;">
                             <label>نوع الصلاحية:</label>
-                            <div class="checkbox-group" style="flex-direction: column; align-items: flex-start; gap: 6px;">
-                                <label><input type="checkbox" id="subIsAdmin" onchange="toggleAdminPermissionCheckbox(this)"> منح صلاحية مدير نظام كامل (Admin)</label>
-                                <div id="subNormalPermissions" style="display: flex; gap: 12px; flex-wrap: wrap;">
-                                    <label><input type="checkbox" id="permAdd"> إضافة عقد جديد</label>
-                                    <label><input type="checkbox" id="permPay"> تحديد المدفوع وتغيير الحالة</label>
+                            <div class="checkbox-group" style="flex-direction: column; align-items: flex-start; gap: 8px;">
+                                <label class="check-container"><input type="checkbox" id="subIsAdmin" onchange="toggleAdminPermissionCheckbox(this)"> منح صلاحية مدير نظام كامل (Admin)</label>
+                                <div id="subNormalPermissions" style="display: flex; gap: 15px; flex-wrap: wrap;">
+                                    <label class="check-container"><input type="checkbox" id="permAdd"> إضافة عقد جديد</label>
+                                    <label class="check-container"><input type="checkbox" id="permPay"> تحديد المدفوع وتغيير الحالة</label>
                                 </div>
                             </div>
                         </div>
                     </div>
-                    <button type="submit" style="width: auto;">حفظ الحساب التابع</button>
+                    <button type="submit" style="width: auto; margin-top: 10px;">حفظ الحساب التابع</button>
                 </form>
             </div>
 
             <!-- إدارة الحسابات التابعة -->
             <div class="card" id="manageUsersSection" style="display: none;">
-                <h3 style="margin-top: 0; color: var(--primary); font-size: 16px;">إدارة الحسابات التابعة والتعديل عليها</h3>
+                <h3 style="margin-top: 0; color: var(--primary); font-size: 16px; font-weight: 800;">إدارة الحسابات التابعة والتعديل عليها</h3>
                 <div class="table-responsive">
-                    <table>
+                    <table class="auto-table">
                         <thead>
                             <tr>
                                 <th>اسم المستخدم</th>
@@ -350,16 +650,20 @@
 
             <!-- الصفحة الرئيسية -->
             <div id="mainSection">
+                <!-- بطاقات إشعارات احترافية محسنة ومزودة بأيقونة جرس هندسية SVG -->
                 <div class="card" id="alertsContainer" style="display: none;">
                     <div class="alerts-header">
-                        <h4 style="margin: 0; color: #1e1e1e; font-size: 15px;">تنبيهات الاستحقاق (أقل من 60 يوم)</h4>
+                        <div class="bell-icon-wrapper">
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path><path d="M13.73 21a2 2 0 0 1-3.46 0"></path></svg>
+                        </div>
+                        <h4 style="margin: 0; color: var(--text-main); font-size: 15px; font-weight: 800;">تنبيهات الاستحقاق (أقل من 60 يوم)</h4>
                         <span class="alerts-badge" id="alertsCount">0</span>
                     </div>
                     <div class="alerts-grid" id="alertsGrid"></div>
                 </div>
 
                 <div class="card" id="addContractCard">
-                    <h3 style="margin-top: 0; color: var(--primary); font-size: 16px;">إضافة وحدة وعقد إيجاري جديد</h3>
+                    <h3 style="margin-top: 0; color: var(--primary); font-size: 16px; font-weight: 800;">إضافة وحدة وعقد إيجاري جديد</h3>
                     <form id="rentalForm">
                         <div class="form-grid">
                             <div class="form-group">
@@ -375,6 +679,27 @@
                             <div class="form-group">
                                 <label>اسم البراند:</label>
                                 <input type="text" id="brandName" required placeholder="مثال: مطابع السروات">
+                            </div>
+                            <div class="form-group">
+                                <label>التصنيف:</label>
+                                <select id="shopCategory" required>
+                                    <option value="مطعم">مطعم</option>
+                                    <option value="مقهي">مقهي</option>
+                                    <option value="نادي رياضي">نادي رياضي</option>
+                                    <option value="العاب">العاب</option>
+                                    <option value="ملابس">ملابس</option>
+                                    <option value="اجهزه الكترونيه">اجهزه الكترونيه</option>
+                                    <option value="جوالات">جوالات</option>
+                                    <option value="مفروشات واثاث">مفروشات واثاث</option>
+                                    <option value="اخرى">اخرى</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label>هل هو براند؟</label>
+                                <select id="isBrand" required>
+                                    <option value="نعم">نعم (براند)</option>
+                                    <option value="لا">لا</option>
+                                </select>
                             </div>
                             <div class="form-group">
                                 <label>اسم المستأجر:</label>
@@ -394,11 +719,36 @@
                             </div>
                             <div class="form-group">
                                 <label>تاريخ بداية العقد:</label>
-                                <input type="date" id="startDate" required>
+                                <input type="date" id="startDate" required onchange="calculateEndDate('startDate', 'contractDuration', 'endDate')">
                             </div>
                             <div class="form-group">
-                                <label>تاريخ نهاية العقد:</label>
-                                <input type="date" id="endDate" required>
+                                <label>مدة العقد:</label>
+                                <select id="contractDuration" required onchange="calculateEndDate('startDate', 'contractDuration', 'endDate')">
+                                    <option value="1">1 سنة</option>
+                                    <option value="2">2 سنتين</option>
+                                    <option value="3">3 سنوات</option>
+                                    <option value="4">4 سنوات</option>
+                                    <option value="5">5 سنوات</option>
+                                    <option value="6">6 سنوات</option>
+                                    <option value="7">7 سنوات</option>
+                                    <option value="8">8 سنوات</option>
+                                    <option value="9">9 سنوات</option>
+                                    <option value="10">10 سنوات</option>
+                                    <option value="11">11 سنة</option>
+                                    <option value="12">12 سنة</option>
+                                    <option value="13">13 سنة</option>
+                                    <option value="14">14 سنة</option>
+                                    <option value="15">15 سنة</option>
+                                    <option value="16">16 سنة</option>
+                                    <option value="17">17 سنة</option>
+                                    <option value="18">18 سنة</option>
+                                    <option value="19">19 سنة</option>
+                                    <option value="20">20 سنة</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label>تاريخ نهاية العقد (تلقائي):</label>
+                                <input type="date" id="endDate" readonly required>
                             </div>
                             <div class="form-group">
                                 <label>طريقة الدفع:</label>
@@ -411,7 +761,7 @@
                             </div>
 
                             <div class="manual-installments-box" id="manualInstallmentsBox" style="display: none;">
-                                <h4>تسجيل الدفعات اليدوية</h4>
+                                <h4 style="margin-top:0; font-size: 13px; font-weight: 700;">تسجيل الدفعات اليدوية</h4>
                                 <div class="form-group">
                                     <label>عدد الدفعات اليدوية الإجمالي:</label>
                                     <input type="text" id="manualCount" value="2" required onchange="generateManualFields()">
@@ -431,7 +781,7 @@
     <!-- نافذة تعديل العقد والدفعات اليدوية -->
     <div class="modal" id="editContractModal">
         <div class="modal-content">
-            <h3 style="color: var(--primary); margin-top:0; font-size: 16px;">تعديل بيانات العقد بالكامل</h3>
+            <h3 style="color: var(--primary); margin-top:0; font-size: 16px; font-weight: 800;">تعديل بيانات العقد بالكامل</h3>
             <form id="editContractForm">
                 <input type="hidden" id="editContractId">
                 <div class="form-grid">
@@ -446,6 +796,27 @@
                     <div class="form-group">
                         <label>اسم البراند:</label>
                         <input type="text" id="editBrandName" required>
+                    </div>
+                    <div class="form-group">
+                        <label>التصنيف:</label>
+                        <select id="editShopCategory" required>
+                            <option value="مطعم">مطعم</option>
+                            <option value="مقهي">مقهي</option>
+                            <option value="نادي رياضي">نادي رياضي</option>
+                            <option value="العاب">العاب</option>
+                            <option value="ملابس">ملابس</option>
+                            <option value="اجهزه الكترونيه">اجهزه الكترونيه</option>
+                            <option value="جوالات">جوالات</option>
+                            <option value="مفروشات واثاث">مفروشات واثاث</option>
+                            <option value="اخرى">اخرى</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>هل هو براند؟</label>
+                        <select id="editIsBrand" required>
+                            <option value="نعم">نعم (براند)</option>
+                            <option value="لا">لا</option>
+                        </select>
                     </div>
                     <div class="form-group">
                         <label>اسم المستأجر:</label>
@@ -465,11 +836,36 @@
                     </div>
                     <div class="form-group">
                         <label>تاريخ بداية العقد:</label>
-                        <input type="date" id="editStartDate" required>
+                        <input type="date" id="editStartDate" required onchange="calculateEndDate('editStartDate', 'editContractDuration', 'editEndDate')">
                     </div>
                     <div class="form-group">
-                        <label>تاريخ نهاية العقد:</label>
-                        <input type="date" id="editEndDate" required>
+                        <label>مدة العقد:</label>
+                        <select id="editContractDuration" required onchange="calculateEndDate('editStartDate', 'editContractDuration', 'editEndDate')">
+                            <option value="1">1 سنة</option>
+                            <option value="2">2 سنتين</option>
+                            <option value="3">3 سنوات</option>
+                            <option value="4">4 سنوات</option>
+                            <option value="5">5 سنوات</option>
+                            <option value="6">6 سنوات</option>
+                            <option value="7">7 سنوات</option>
+                            <option value="8">8 سنوات</option>
+                            <option value="9">9 سنوات</option>
+                            <option value="10">10 سنوات</option>
+                            <option value="11">11 سنة</option>
+                            <option value="12">12 سنة</option>
+                            <option value="13">13 سنة</option>
+                            <option value="14">14 سنة</option>
+                            <option value="15">15 سنة</option>
+                            <option value="16">16 سنة</option>
+                            <option value="17">17 سنة</option>
+                            <option value="18">18 سنة</option>
+                            <option value="19">19 سنة</option>
+                            <option value="20">20 سنة</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>تاريخ نهاية العقد (تلقائي):</label>
+                        <input type="date" id="editEndDate" readonly required>
                     </div>
                     <div class="form-group">
                         <label>نوع الدفعات:</label>
@@ -482,7 +878,7 @@
                     </div>
 
                     <div class="manual-installments-box" id="editManualInstallmentsBox" style="display: none;">
-                        <h4>تعديل تفاصيل الدفعات اليدوية</h4>
+                        <h4 style="margin-top:0; font-size: 13px; font-weight: 700;">تعديل تفاصيل الدفعات اليدوية</h4>
                         <div class="form-group">
                             <label>عدد الدفعات اليدوية الإجمالي:</label>
                             <input type="text" id="editManualCount" value="2" required onchange="generateEditManualFields()">
@@ -490,9 +886,9 @@
                         <div id="editManualFieldsContainer"></div>
                     </div>
                 </div>
-                <div style="display: flex; gap: 8px; margin-top: 12px;">
+                <div style="display: flex; gap: 10px; margin-top: 15px;">
                     <button type="submit" style="flex: 1;">حفظ التعديلات</button>
-                    <button type="button" onclick="closeEditContractModal()" style="flex: 1; background-color: #64748b;">إلغاء</button>
+                    <button type="button" onclick="closeEditContractModal()" style="flex: 1; background-color: var(--text-muted);">إلغاء</button>
                 </div>
             </form>
         </div>
@@ -501,7 +897,7 @@
     <!-- نافذة تعديل الحساب -->
     <div class="modal" id="editUserModal">
         <div class="modal-content" style="max-width: 420px;">
-            <h3 style="color: var(--primary); margin-top:0; font-size: 16px;">تعديل بيانات الحساب التابع</h3>
+            <h3 style="color: var(--primary); margin-top:0; font-size: 16px; font-weight: 800;">تعديل بيانات الحساب التابع</h3>
             <input type="hidden" id="editUserOriginalUsername">
             <div class="form-group">
                 <label>اسم المستخدم:</label>
@@ -509,21 +905,26 @@
             </div>
             <div class="form-group">
                 <label>كلمة المرور:</label>
-                <input type="text" id="editPassword" required>
+                <div class="password-container">
+                    <input type="password" id="editPassword" required style="padding-left: 38px;">
+                    <button type="button" class="password-toggle-btn" onclick="togglePasswordInput('editPassword', this)" title="إظهار/إخفاء كلمة المرور">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>
+                    </button>
+                </div>
             </div>
             <div class="form-group">
                 <label>الصلاحيات:</label>
-                <div class="checkbox-group" style="flex-direction: column; align-items: flex-start; gap: 6px;">
-                    <label><input type="checkbox" id="editIsAdmin" onchange="toggleEditAdminCheckbox(this)"> منح صلاحية مدير نظام (Admin)</label>
+                <div class="checkbox-group" style="flex-direction: column; align-items: flex-start; gap: 8px;">
+                    <label class="check-container"><input type="checkbox" id="editIsAdmin" onchange="toggleEditAdminCheckbox(this)"> منح صلاحية مدير نظام (Admin)</label>
                     <div id="editNormalPermissions" style="display: flex; gap: 12px;">
-                        <label><input type="checkbox" id="editPermAdd"> إضافة عقد جديد</label>
-                        <label><input type="checkbox" id="editPermPay"> تحديد المدفوع وتغيير الحالة</label>
+                        <label class="check-container"><input type="checkbox" id="editPermAdd"> إضافة عقد جديد</label>
+                        <label class="check-container"><input type="checkbox" id="editPermPay"> تحديد المدفوع وتغيير الحالة</label>
                     </div>
                 </div>
             </div>
-            <div style="display: flex; gap: 8px; margin-top: 12px;">
+            <div style="display: flex; gap: 10px; margin-top: 15px;">
                 <button onclick="saveUserEdits()" style="flex: 1;">حفظ</button>
-                <button onclick="closeEditUserModal()" style="flex: 1; background-color: #64748b;">إلغاء</button>
+                <button onclick="closeEditUserModal()" style="flex: 1; background-color: var(--text-muted);">إلغاء</button>
             </div>
         </div>
     </div>
@@ -531,28 +932,69 @@
     <!-- نافذة تفاصيل الدفعات والمؤقت التنازلي -->
     <div class="modal" id="installmentsModal">
         <div class="modal-content">
-            <h3 style="color: var(--primary); margin-top:0; font-size: 16px;" id="modalContractTitle">تفاصيل دفعات العقد</h3>
+            <h3 style="color: var(--primary); margin-top:0; font-size: 16px; font-weight: 800;" id="modalContractTitle">تفاصيل دفعات العقد</h3>
             <div class="table-responsive">
-                <table style="width: 100%; min-width: 550px;">
+                <table class="installments-table">
                     <thead>
                         <tr>
-                            <th>رقم الدفعة</th>
-                            <th>تاريخ الاستحقاق</th>
-                            <th>قيمة الدفعة</th>
-                            <th>وصف الحالة</th>
-                            <th>المؤقت التنازلي</th>
-                            <th>الإجراء</th>
+                            <th style="width: 10%;">(#)</th>
+                            <th style="width: 20%;">تاريخ الاستحقاق</th>
+                            <th style="width: 18%;">قيمة الدفعة</th>
+                            <th style="width: 22%;">العد التنازلي</th>
+                            <th style="width: 14%;">الحالة</th>
+                            <th style="width: 16%;">إجراء</th>
                         </tr>
                     </thead>
                     <tbody id="modalInstallmentsBody"></tbody>
                 </table>
             </div>
-            <button onclick="closeModal()" style="margin-top: 12px; width: 100%; background-color: #64748b;">إغلاق</button>
+            <button onclick="closeModal()" style="margin-top: 15px; width: 100%; background-color: var(--text-muted);">إغلاق النافذة</button>
         </div>
     </div>
 
     <script>
-        // إعدادات Firebase
+        function toggleTheme() {
+            const body = document.body;
+            const themeBtnText = document.getElementById('themeBtnText');
+            const themeIconSvg = document.getElementById('themeIconSvg');
+            
+            if (body.getAttribute('data-theme') === 'dark') {
+                body.setAttribute('data-theme', 'light');
+                themeBtnText.innerText = 'الوضع الليلي';
+                themeIconSvg.innerHTML = '<path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>';
+                localStorage.setItem('yesur_theme', 'light');
+            } else {
+                body.setAttribute('data-theme', 'dark');
+                themeBtnText.innerText = 'الوضع النهاري';
+                themeIconSvg.innerHTML = '<circle cx="12" cy="12" r="5"></circle><line x1="12" y1="1" x2="12" y2="3"></line><line x1="12" y1="21" x2="12" y2="23"></line><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line><line x1="1" y1="12" x2="3" y2="12"></line><line x1="21" y1="12" x2="23" y2="12"></line><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>';
+                localStorage.setItem('yesur_theme', 'dark');
+            }
+        }
+
+        function togglePasswordInput(fieldId, btnElement) {
+            const inputField = document.getElementById(fieldId);
+            if (!inputField) return;
+
+            if (inputField.type === 'password') {
+                inputField.type = 'text';
+                btnElement.innerHTML = `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"></path><line x1="1" y1="1" x2="23" y2="23"></line></svg>`;
+            } else {
+                inputField.type = 'password';
+                btnElement.innerHTML = `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>`;
+            }
+        }
+
+        window.addEventListener('DOMContentLoaded', () => {
+            const savedTheme = localStorage.getItem('yesur_theme') || 'dark';
+            document.body.setAttribute('data-theme', savedTheme);
+            const themeBtnText = document.getElementById('themeBtnText');
+            const themeIconSvg = document.getElementById('themeIconSvg');
+            if (savedTheme === 'light') {
+                if(themeBtnText) themeBtnText.innerText = 'الوضع الليلي';
+                if(themeIconSvg) themeIconSvg.innerHTML = '<path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>';
+            }
+        });
+
         const firebaseConfig = {
             apiKey: "AIzaSyDj_BoyeRyjtBy6lrGmfscoIVmHU74GWIk",
             authDomain: "uosr-ed44d.firebaseapp.com",
@@ -574,8 +1016,27 @@
         let currentUser = null;
         let activeModalContractId = null;
         let timerInterval = null;
+        let myChartInstance = null;
+        let brandsChartInstance = null;
+        let overdueChartInstance = null;
 
-        // جلب البيانات من السحاب ومزامنتها لحظياً
+        function calculateEndDate(startInputId, durationSelectId, endInputId) {
+            const startDateVal = document.getElementById(startInputId).value;
+            const years = parseInt(document.getElementById(durationSelectId).value) || 1;
+            
+            if (!startDateVal) return;
+
+            const d = new Date(startDateVal);
+            d.setFullYear(d.getFullYear() + years);
+            d.setDate(d.getDate() - 1);
+
+            const yearStr = d.getFullYear();
+            const monthStr = String(d.getMonth() + 1).padStart(2, '0');
+            const dayStr = String(d.getDate()).padStart(2, '0');
+
+            document.getElementById(endInputId).value = `${yearStr}-${monthStr}-${dayStr}`;
+        }
+
         db.ref('yesur_data').on('value', (snapshot) => {
             const data = snapshot.val();
             if (data) {
@@ -616,10 +1077,12 @@
         function populateCenterSelectOptions() {
             const select = document.getElementById('centerNameSelect');
             const editSelect = document.getElementById('editCenterNameSelect');
+            const statSelect = document.getElementById('statCenterSelect');
             if(!select || !editSelect) return;
             
             select.innerHTML = '<option value=""> اختر المركز التجاري </option>';
             editSelect.innerHTML = '<option value=""> اختر المركز التجاري </option>';
+            if(statSelect) statSelect.innerHTML = '<option value="الكل">جميع المراكز التجارية</option>';
             
             centersList.forEach(c => {
                 const opt = document.createElement('option');
@@ -631,6 +1094,13 @@
                 editOpt.value = c;
                 editOpt.innerText = c;
                 editSelect.appendChild(editOpt);
+
+                if(statSelect) {
+                    const statOpt = document.createElement('option');
+                    statOpt.value = c;
+                    statOpt.innerText = c;
+                    statSelect.appendChild(statOpt);
+                }
             });
         }
 
@@ -642,11 +1112,13 @@
         function showSection(section) {
             document.getElementById('mainSection').style.display = section === 'main' ? 'block' : 'none';
             document.getElementById('centersSection').style.display = section === 'centers' ? 'block' : 'none';
+            document.getElementById('statisticsSection').style.display = section === 'statistics' ? 'block' : 'none';
             document.getElementById('subAccountSection').style.display = section === 'subAccount' ? 'block' : 'none';
             document.getElementById('manageUsersSection').style.display = section === 'manageUsers' ? 'block' : 'none';
             
             if (section === 'main') renderAllCentersTables();
             if (section === 'centers') renderCenters();
+            if (section === 'statistics') renderStatistics();
             if (section === 'manageUsers') renderUsersTable();
             
             if (document.getElementById('sideMenu').classList.contains('open')) {
@@ -799,29 +1271,33 @@
                     <td>${u.username}</td>
                     <td>
                         <span id="pass-text-${index}">****</span>
-                        <button type="button" class="eye-btn" onclick="togglePasswordVisibility(${index}, '${u.password}')" title="إظهار/إخفاء كلمة المرور">👁</button>
+                        <button type="button" class="table-eye-btn" onclick="togglePasswordVisibility(${index}, '${u.password}', this)" title="إظهار/إخفاء كلمة المرور">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>
+                        </button>
                     </td>
                     <td>${u.isOwner ? 'المالك الأساسي' : (u.isAdmin ? 'مدير نظام (Admin)' : 'حساب تابع')}</td>
-                    <td>${u.isOwner || u.isAdmin ? 'مطلق (كامل الصلاحيات)' : `إضافة: ${u.permissions.add ? 'نعم' : 'لا'} \vert{} دفعات: ${u.permissions.pay ? 'نعم' : 'لا'}`}</td>
+                    <td>${u.isOwner || u.isAdmin ? 'مطلق (كامل الصلاحيات)' : `إضافة: ${u.permissions.add ? 'نعم' : 'لا'} | دفعات: ${u.permissions.pay ? 'نعم' : 'لا'}`}</td>
                     <td>
                         ${!u.isOwner ? `
                             <button onclick="openEditUserModal('${u.username}')" class="btn-warning">تعديل</button>
                             <button onclick="deleteUser('${u.username}')" class="btn-danger">حذف</button>
-                        ` : '<span style="color:#64748b; font-size:11px;">محمي</span>'}
+                        ` : '<span style="color:var(--text-muted); font-size:11px;">محمي</span>'}
                     </td>
                 `;
                 tbody.appendChild(tr);
             });
         }
 
-        function togglePasswordVisibility(index, realPassword) {
+        function togglePasswordVisibility(index, realPassword, btnElement) {
             const span = document.getElementById(`pass-text-${index}`);
             if (span.innerText === '****') {
                 span.innerText = realPassword;
                 span.style.color = 'var(--primary)';
+                btnElement.innerHTML = `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"></path><line x1="1" y1="1" x2="23" y2="23"></line></svg>`;
             } else {
                 span.innerText = '****';
                 span.style.color = 'inherit';
+                btnElement.innerHTML = `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>`;
             }
         }
 
@@ -940,17 +1416,8 @@
             }
         }
 
-        function generateInstallmentsArray(startDateStr, endDateStr, pType, annualRent) {
-            const start = new Date(startDateStr);
-            const end = new Date(endDateStr);
-
-            let years = end.getFullYear() - start.getFullYear();
-            const monthDiff = end.getMonth() - start.getMonth();
-            if (monthDiff > 6 || (monthDiff === 6 && end.getDate() >= start.getDate())) {
-                years += 0.5;
-            }
-            if (years <= 0) years = 1;
-
+        function generateInstallmentsArray(startDateStr, durationYears, pType, annualRent) {
+            const years = parseFloat(durationYears) || 1;
             const totalContractRent = annualRent * years;
 
             let perYearCount = 1;
@@ -970,7 +1437,8 @@
                     id: i,
                     dueDate: formattedDate,
                     amount: parseFloat(installmentVal),
-                    status: 'غير مسدد'
+                    status: 'غير مسدد',
+                    isOverdueFlag: false
                 });
                 currentDueDate.setMonth(currentDueDate.getMonth() + monthsStep);
             }
@@ -992,11 +1460,12 @@
             const annualRent = parseFloat(parseArabicNumbers(annualRentRaw));
             
             const startDateStr = document.getElementById('startDate').value;
+            const durationYears = parseInt(document.getElementById('contractDuration').value) || 1;
             const endDateStr = document.getElementById('endDate').value;
             const pType = document.getElementById('paymentType').value;
 
-            if (new Date(endDateStr) <= new Date(startDateStr)) {
-                alert('تاريخ نهاية العقد يجب أن يكون بعد تاريخ بداية العقد.');
+            if (!startDateStr || !endDateStr) {
+                alert('يرجى التأكد من اختيار تاريخ بداية العقد.');
                 return;
             }
 
@@ -1022,11 +1491,12 @@
                         id: index + 1,
                         dueDate: d.value,
                         amount: amt,
-                        status: 'غير مسدد'
+                        status: 'غير مسدد',
+                        isOverdueFlag: false
                     });
                 });
             } else {
-                generatedInstallments = generateInstallmentsArray(startDateStr, endDateStr, pType, annualRent);
+                generatedInstallments = generateInstallmentsArray(startDateStr, durationYears, pType, annualRent);
             }
 
             const newContract = {
@@ -1034,12 +1504,15 @@
                 centerName: selectedCenter,
                 shopNumber: parseArabicNumbers(document.getElementById('shopNumber').value.trim()),
                 brandName: document.getElementById('brandName').value.trim(),
+                shopCategory: document.getElementById('shopCategory').value,
+                isBrand: document.getElementById('isBrand').value,
                 ownerName: document.getElementById('ownerName').value.trim(),
                 ownerPhone: parseArabicNumbers(document.getElementById('ownerPhone').value.trim()),
                 shopArea: parseArabicNumbers(document.getElementById('shopArea').value.trim()),
                 rentAmount: annualRent,
                 paymentType: pType,
                 startDate: startDateStr,
+                contractDuration: durationYears,
                 endDate: endDateStr,
                 installments: generatedInstallments,
                 addedBy: currentUser ? currentUser.username : 'غير معروف',
@@ -1063,13 +1536,18 @@
             document.getElementById('editCenterNameSelect').value = contract.centerName;
             document.getElementById('editShopNumber').value = contract.shopNumber;
             document.getElementById('editBrandName').value = contract.brandName;
+            document.getElementById('editShopCategory').value = contract.shopCategory || 'اخرى';
+            document.getElementById('editIsBrand').value = contract.isBrand || 'لا';
             document.getElementById('editOwnerName').value = contract.ownerName;
             document.getElementById('editOwnerPhone').value = contract.ownerPhone;
             document.getElementById('editShopArea').value = contract.shopArea;
             document.getElementById('editRentAmount').value = contract.rentAmount;
             document.getElementById('editStartDate').value = contract.startDate;
+            document.getElementById('editContractDuration').value = contract.contractDuration || 1;
             document.getElementById('editEndDate').value = contract.endDate || '';
             document.getElementById('editPaymentType').value = contract.paymentType;
+
+            calculateEndDate('editStartDate', 'editContractDuration', 'editEndDate');
 
             const editManualBox = document.getElementById('editManualInstallmentsBox');
             if (contract.paymentType === 'يدوية') {
@@ -1096,22 +1574,21 @@
                 const annualRentRaw = document.getElementById('editRentAmount').value;
                 const annualRent = parseFloat(parseArabicNumbers(annualRentRaw));
                 const startDateStr = document.getElementById('editStartDate').value;
+                const durationYears = parseInt(document.getElementById('editContractDuration').value) || 1;
                 const endDateStr = document.getElementById('editEndDate').value;
                 const pType = document.getElementById('editPaymentType').value;
-
-                if (new Date(endDateStr) <= new Date(startDateStr)) {
-                    alert('تاريخ نهاية العقد يجب أن يكون بعد تاريخ بداية العقد.');
-                    return;
-                }
 
                 contract.centerName = document.getElementById('editCenterNameSelect').value;
                 contract.shopNumber = parseArabicNumbers(document.getElementById('editShopNumber').value.trim());
                 contract.brandName = document.getElementById('editBrandName').value.trim();
+                contract.shopCategory = document.getElementById('editShopCategory').value;
+                contract.isBrand = document.getElementById('editIsBrand').value;
                 contract.ownerName = document.getElementById('editOwnerName').value.trim();
                 contract.ownerPhone = parseArabicNumbers(document.getElementById('editOwnerPhone').value.trim());
                 contract.shopArea = parseArabicNumbers(document.getElementById('editShopArea').value.trim());
                 contract.rentAmount = annualRent;
                 contract.startDate = startDateStr;
+                contract.contractDuration = durationYears;
                 contract.endDate = endDateStr;
                 contract.paymentType = pType;
                 
@@ -1136,17 +1613,19 @@
                     dates.forEach((d, index) => {
                         const amt = parseFloat(parseArabicNumbers(amounts[index].value)) || 0;
                         const prevStatus = (contract.installments[index] && contract.installments[index].status) ? contract.installments[index].status : 'غير مسدد';
+                        const prevFlag = (contract.installments[index] && contract.installments[index].isOverdueFlag) ? contract.installments[index].isOverdueFlag : false;
                         newManualInstallments.push({
                             id: index + 1,
                             dueDate: d.value,
                             amount: amt,
-                            status: prevStatus
+                            status: prevStatus,
+                            isOverdueFlag: prevFlag
                         });
                     });
 
                     contract.installments = newManualInstallments;
                 } else {
-                    contract.installments = generateInstallmentsArray(startDateStr, endDateStr, pType, annualRent);
+                    contract.installments = generateInstallmentsArray(startDateStr, durationYears, pType, annualRent);
                 }
 
                 syncToCloud();
@@ -1156,6 +1635,57 @@
                 checkAlerts();
             }
         });
+
+        function getInstallmentStatusText(inst) {
+            const isPaid = inst.status === 'تم السداد' || inst.status === 'مسدد';
+
+            if (isPaid) {
+                if (inst.isOverdueFlag) {
+                    return { text: 'مسددة بتأخر', badgeClass: 'badge-overdue' };
+                } else {
+                    return { text: 'مسدده', badgeClass: 'badge-paid' };
+                }
+            } else {
+                const today = new Date();
+                today.setHours(0, 0, 0, 0);
+                const due = new Date(inst.dueDate);
+                due.setHours(0, 0, 0, 0);
+
+                if (inst.isOverdueFlag) {
+                    return { text: 'متأخر', badgeClass: 'badge-overdue' };
+                } else if (due < today) {
+                    return { text: 'غير مسدد', badgeClass: 'badge-overdue' };
+                } else {
+                    return { text: 'دفعة قادمة', badgeClass: 'badge-upcoming' };
+                }
+            }
+        }
+
+        function getCountdownString(inst, dueDateStr) {
+            const isPaid = inst.status === 'تم السداد' || inst.status === 'مسدد';
+            if (isPaid) {
+                return `<span class="timer-box" style="color:var(--text-muted);">-</span>`;
+            }
+
+            const now = new Date();
+            const due = new Date(dueDateStr + 'T23:59:59');
+            const diff = due - now;
+
+            if (diff <= 0) {
+                const absDiff = Math.abs(diff);
+                const days = Math.floor(absDiff / (1000 * 60 * 60 * 24));
+                const hours = Math.floor((absDiff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+                const minutes = Math.floor((absDiff % (1000 * 60 * 60)) / (1000 * 60));
+                return `<span class="timer-box" style="color:var(--danger); border-color:rgba(239,68,68,0.3);">فائتة: ${days}ي ${hours}س ${minutes}د</span>`;
+            }
+
+            const days = Math.floor(diff / (1000 * 60 * 60 * 24));
+            const hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+            const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+            const seconds = Math.floor((diff % (1000 * 60)) / 1000);
+
+            return `<span class="timer-box">${days}ي ${hours}س ${minutes}د ${seconds}ث</span>`;
+        }
 
         function getNextInstallmentInfo(contract) {
             const unpaid = contract.installments.filter(inst => inst.status !== 'تم السداد' && inst.status !== 'مسدد');
@@ -1185,7 +1715,11 @@
             let daysClass = 'days-normal';
             let starHtml = '';
 
-            if (diffDays < 0) {
+            if (next.isOverdueFlag) {
+                daysText = 'متأخر';
+                daysClass = 'days-urgent';
+                starHtml = '<span class="status-star star-red" title="دفعة متأخرة">*</span>';
+            } else if (diffDays < 0) {
                 daysText = `متأخرة بـ ${Math.abs(diffDays)} يوم`;
                 daysClass = 'days-urgent';
                 starHtml = '<span class="status-star star-red" title="دفعة متأخرة">*</span>';
@@ -1193,10 +1727,6 @@
                 daysText = 'مستحقة اليوم';
                 daysClass = 'days-due';
                 starHtml = '<span class="status-star star-green" title="الدفعة حانت اليوم">*</span>';
-            } else if (diffDays <= 60) {
-                daysText = `متبقي ${diffDays} يوم`;
-                daysClass = 'days-warning';
-                starHtml = '';
             } else {
                 daysText = `متبقي ${diffDays} يوم`;
                 daysClass = 'days-normal';
@@ -1215,12 +1745,201 @@
             };
         }
 
+        function renderStatistics() {
+            const selectedCenter = document.getElementById('statCenterSelect').value;
+            const filteredRentals = selectedCenter === 'الكل' 
+                ? rentals 
+                : rentals.filter(r => r.centerName === selectedCenter);
+
+            const incomeBody = document.getElementById('centersIncomeTableBody');
+            incomeBody.innerHTML = '';
+            centersList.forEach(c => {
+                const cRentals = rentals.filter(r => r.centerName === c);
+                const totalAnnualIncome = cRentals.reduce((sum, r) => sum + (parseFloat(r.rentAmount) || 0), 0);
+                const totalDurationIncome = cRentals.reduce((sum, r) => {
+                    const years = parseInt(r.contractDuration) || 1;
+                    return sum + ((parseFloat(r.rentAmount) || 0) * years);
+                }, 0);
+
+                incomeBody.innerHTML += `
+                    <tr>
+                        <td><strong>${c}</strong></td>
+                        <td>${cRentals.length}</td>
+                        <td>${formatCurrency(totalAnnualIncome)}</td>
+                        <td><strong style="color:var(--success);">${formatCurrency(totalDurationIncome)}</strong></td>
+                    </tr>
+                `;
+            });
+
+            const yearlyBody = document.getElementById('yearlyProfitTableBody');
+            yearlyBody.innerHTML = '';
+            if (filteredRentals.length === 0) {
+                yearlyBody.innerHTML = `<tr><td colspan="5" style="color:var(--text-muted);">لا توجد عقود مسجلة</td></tr>`;
+            } else {
+                filteredRentals.forEach(r => {
+                    const years = parseInt(r.contractDuration) || 1;
+                    const totalProfit = (parseFloat(r.rentAmount) || 0) * years;
+
+                    yearlyBody.innerHTML += `
+                        <tr>
+                            <td><strong>${r.brandName}</strong> (${r.shopCategory || 'أخرى'})</td>
+                            <td>${r.centerName}</td>
+                            <td>${formatCurrency(r.rentAmount)}</td>
+                            <td>${years} سنة/سنوات</td>
+                            <td><strong style="color:var(--success);">${formatCurrency(totalProfit)}</strong></td>
+                        </tr>
+                    `;
+                });
+            }
+
+            const categoryOverdueCounts = {};
+            filteredRentals.forEach(r => {
+                let hasOverdue = r.installments.some(inst => inst.isOverdueFlag);
+                if (hasOverdue) {
+                    const cat = r.shopCategory || 'أخرى';
+                    categoryOverdueCounts[cat] = (categoryOverdueCounts[cat] || 0) + 1;
+                }
+            });
+
+            const overdueBody = document.getElementById('overdueActivitiesTableBody');
+            overdueBody.innerHTML = '';
+            let overdueContracts = [];
+
+            filteredRentals.forEach(r => {
+                let overdueCount = 0;
+                r.installments.forEach(inst => {
+                    if (inst.isOverdueFlag) {
+                        overdueCount++;
+                    }
+                });
+
+                if (overdueCount > 0) {
+                    overdueContracts.push({
+                        brandName: r.brandName,
+                        category: r.shopCategory || 'أخرى',
+                        ownerName: r.ownerName,
+                        phone: r.ownerPhone,
+                        overdueCount: overdueCount,
+                        centerName: r.centerName
+                    });
+                }
+            });
+
+            if (overdueContracts.length === 0) {
+                overdueBody.innerHTML = `<tr><td colspan="6" style="color:var(--success); font-weight:bold;">لا توجد محلات متعثرة حالياً!</td></tr>`;
+            } else {
+                overdueContracts.forEach(item => {
+                    overdueBody.innerHTML += `
+                        <tr>
+                            <td><strong>${item.brandName}</strong></td>
+                            <td>${item.category}</td>
+                            <td>${item.ownerName}</td>
+                            <td>${item.phone}</td>
+                            <td><span class="badge badge-overdue">${item.overdueCount} دفعات</span></td>
+                            <td>${item.centerName}</td>
+                        </tr>
+                    `;
+                });
+            }
+
+            const overdueLabels = Object.keys(categoryOverdueCounts);
+            const overdueValues = Object.values(categoryOverdueCounts);
+            const ctxOverdue = document.getElementById('overdueChart').getContext('2d');
+            
+            if (overdueChartInstance) overdueChartInstance.destroy();
+            
+            overdueChartInstance = new Chart(ctxOverdue, {
+                type: 'bar',
+                data: {
+                    labels: overdueLabels.length > 0 ? overdueLabels : ['لا توجد أنشطة متعثرة'],
+                    datasets: [{
+                        label: 'عدد حالات التعثر',
+                        data: overdueValues.length > 0 ? overdueValues : [0],
+                        backgroundColor: '#ef4444',
+                        borderColor: '#dc2626',
+                        borderWidth: 1,
+                        borderRadius: 6
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            ticks: { precision: 0, color: getComputedStyle(document.body).getPropertyValue('--text-main') },
+                            grid: { color: getComputedStyle(document.body).getPropertyValue('--border-color') }
+                        },
+                        x: {
+                            ticks: { color: getComputedStyle(document.body).getPropertyValue('--text-main'), font: { family: 'Tajawal' } },
+                            grid: { display: false }
+                        }
+                    },
+                    plugins: {
+                        legend: { display: false }
+                    }
+                }
+            });
+
+            const categoryCounts = {};
+            filteredRentals.forEach(r => {
+                const cat = r.shopCategory || 'أخرى';
+                categoryCounts[cat] = (categoryCounts[cat] || 0) + 1;
+            });
+            const catLabels = Object.keys(categoryCounts);
+            const catValues = Object.values(categoryCounts);
+            const bgColors = ['#0ea5e9', '#6366f1', '#f59e0b', '#10b981', '#ec4899', '#8b5cf6', '#f97316', '#14b8a6', '#64748b'];
+
+            const ctx1 = document.getElementById('activitiesChart').getContext('2d');
+            if (myChartInstance) myChartInstance.destroy();
+            myChartInstance = new Chart(ctx1, {
+                type: 'doughnut',
+                data: {
+                    labels: catLabels.map((l, i) => `${l} (${catValues[i]})`),
+                    datasets: [{
+                        data: catValues,
+                        backgroundColor: bgColors.slice(0, catLabels.length),
+                        borderWidth: 0
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    plugins: { legend: { position: 'bottom', labels: { font: { family: 'Tajawal', size: 11 }, color: getComputedStyle(document.body).getPropertyValue('--text-main') } } }
+                }
+            });
+
+            let brandCount = 0;
+            let nonBrandCount = 0;
+            filteredRentals.forEach(r => {
+                if (r.isBrand === 'نعم') brandCount++;
+                else nonBrandCount++;
+            });
+
+            const ctx2 = document.getElementById('brandsChart').getContext('2d');
+            if (brandsChartInstance) brandsChartInstance.destroy();
+            brandsChartInstance = new Chart(ctx2, {
+                type: 'doughnut',
+                data: {
+                    labels: [`براند (${brandCount})`, `غير براند (${nonBrandCount})`],
+                    datasets: [{
+                        data: [brandCount, nonBrandCount],
+                        backgroundColor: ['#0ea5e9', '#64748b'],
+                        borderWidth: 0
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    plugins: { legend: { position: 'bottom', labels: { font: { family: 'Tajawal', size: 11 }, color: getComputedStyle(document.body).getPropertyValue('--text-main') } } }
+                }
+            });
+        }
+
         function renderCenters() {
             const grid = document.getElementById('centersGrid');
             grid.innerHTML = '';
 
             if (centersList.length === 0) {
-                grid.innerHTML = '<p style="color:#64748b; grid-column:span 3;">لا توجد مراكز تجارية مسجلة حالياً.</p>';
+                grid.innerHTML = '<p style="color:var(--text-muted); grid-column:span 3;">لا توجد مراكز تجارية مسجلة حالياً.</p>';
                 return;
             }
 
@@ -1230,14 +1949,14 @@
                 const count = rentals.filter(r => r.centerName === center).length;
                 grid.innerHTML += `
                     <div class="center-card">
-                        <div class="center-card-content">
-                            <h4 style="margin: 0 0 4px 0; color: var(--primary); font-size: 14px;">${center}</h4>
-                            <span style="font-size: 16px; font-weight: bold;">${count}</span> عقود
+                        <div class="center-card-content" onclick="showSection('main')">
+                            <h4 style="margin: 0 0 6px 0; color: var(--text-main); font-size: 15px; font-weight: 800;">${center}</h4>
+                            <span style="font-size: 20px; font-weight: 900; color: var(--primary);">${count}</span> <span style="font-size: 11px; color: var(--text-muted);">عقود نشطة</span>
                         </div>
                         ${hasAdminAccess ? `
                             <div class="center-card-actions">
-                                <button onclick="editCenter('${center}')" class="btn-warning" style="padding: 3px 8px; font-size: 10px;">تعديل</button>
-                                <button onclick="deleteCenter('${center}')" class="btn-danger" style="padding: 3px 8px; font-size: 10px;">حذف</button>
+                                <button onclick="editCenter('${center}')" class="btn-warning" style="padding: 4px 10px; font-size: 10px;">تعديل</button>
+                                <button onclick="deleteCenter('${center}')" class="btn-danger" style="padding: 4px 10px; font-size: 10px;">حذف</button>
                             </div>
                         ` : ''}
                     </div>
@@ -1250,7 +1969,7 @@
             container.innerHTML = '';
 
             if (centersList.length === 0) {
-                container.innerHTML = '<div class="card"><p style="text-align:center; color:#64748b;">لا توجد مراكز تجارية مسجلة.</p></div>';
+                container.innerHTML = '<div class="card"><p style="text-align:center; color:var(--text-muted);">لا توجد مراكز تجارية مسجلة.</p></div>';
                 return;
             }
 
@@ -1265,22 +1984,28 @@
 
                 let tableRowsHtml = '';
                 if (centerContracts.length === 0) {
-                    tableRowsHtml = `<tr><td colspan="14" style="text-align:center; color:#64748b; padding: 18px; font-weight: bold;">لا توجد عقود تجارية على هذا المركز</td></tr>`;
+                    tableRowsHtml = `<tr><td colspan="16" style="text-align:center; color:var(--text-muted); padding: 20px; font-weight: bold;">لا توجد عقود تجارية على هذا المركز</td></tr>`;
                 } else {
                     centerContracts.forEach(item => {
                         const nextInst = getNextInstallmentInfo(item);
                         const addedBy = item.addedBy || '-';
                         const editedBy = item.editedBy || '-';
+                        
+                        const brandBadgeIcon = item.isBrand === 'نعم' 
+                            ? '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--success)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>' 
+                            : '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--text-muted)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>';
 
                         tableRowsHtml += `
                             <tr>
                                 <td>${nextInst.starHtml}</td>
-                                <td>${item.shopNumber}</td>
-                                <td><strong style="font-weight: bold;">${item.brandName}</strong></td>
+                                <td><strong>${item.shopNumber}</strong></td>
+                                <td><strong style="font-weight: 800; color: var(--primary);">${item.brandName}</strong></td>
+                                <td><span style="background:var(--input-bg); border: 1px solid var(--border-color); padding:3px 6px; border-radius:6px; font-size:11px;">${item.shopCategory || 'أخرى'}</span></td>
+                                <td>${brandBadgeIcon}</td>
                                 <td>${item.ownerName}</td>
                                 <td>${item.ownerPhone}</td>
                                 <td>${item.shopArea} م²</td>
-                                <td>${formatCurrency(item.rentAmount)}</td>
+                                <td><strong>${formatCurrency(item.rentAmount)}</strong></td>
                                 <td>${nextInst.html}</td>
                                 <td>${item.paymentType}</td>
                                 <td>${item.startDate}</td>
@@ -1305,7 +2030,7 @@
                 cardDiv.className = 'card';
                 cardDiv.innerHTML = `
                     <div class="actions-bar">
-                        <h3 style="margin: 0; color: var(--primary); font-size: 16px;">سجل عقود (${centerName})</h3>
+                        <h3 style="margin: 0; color: var(--text-main); font-size: 16px; font-weight: 800;">سجل عقود (${centerName})</h3>
                         ${centerContracts.length > 0 ? `<button onclick="exportCenterExcel('${centerName}')" class="btn-excel">تصدير إلى Excel</button>` : ''}
                     </div>
                     <div class="table-responsive">
@@ -1315,6 +2040,8 @@
                                     <th>#</th>
                                     <th>المحل</th>
                                     <th>البراند</th>
+                                    <th>التصنيف</th>
+                                    <th>براند؟</th>
                                     <th>المستأجر</th>
                                     <th>التواصل</th>
                                     <th>المساحة</th>
@@ -1349,98 +2076,93 @@
 
             if (timerInterval) clearInterval(timerInterval);
             timerInterval = setInterval(() => {
-                updateTimers(contract);
+                const activeContract = rentals.find(r => r.id === activeModalContractId);
+                if (activeContract) {
+                    renderModalInstallments(activeContract, true);
+                }
             }, 1000);
         }
 
-        function getInstallmentStatusDetails(inst) {
-            if (inst.status === 'تم السداد' || inst.status === 'مسدد') {
-                return { text: 'تم السداد', badgeClass: 'badge-paid' };
-            }
-            
-            const now = new Date();
-            const dueDate = new Date(inst.dueDate + 'T23:59:59');
-
-            if (now > dueDate) {
-                return { text: 'دفعة متأخرة', badgeClass: 'badge-overdue' };
-            } else {
-                return { text: 'دفعة قادمة', badgeClass: 'badge-upcoming' };
-            }
-        }
-
-        function renderModalInstallments(contract) {
+        function renderModalInstallments(contract, isTimerUpdate = false) {
             const tbody = document.getElementById('modalInstallmentsBody');
-            tbody.innerHTML = '';
+            if (!isTimerUpdate) {
+                tbody.innerHTML = '';
+            }
             const hasAdminAccess = currentUser.isOwner || currentUser.isAdmin;
             const canPay = hasAdminAccess || currentUser.permissions.pay;
 
-            contract.installments.forEach(inst => {
-                const statusInfo = getInstallmentStatusDetails(inst);
+            contract.installments.forEach((inst) => {
+                const isPaid = inst.status === 'تم السداد' || inst.status === 'مسدد';
+                const isOverdue = inst.isOverdueFlag || false;
+                const statusInfo = getInstallmentStatusText(inst);
+                const countdownStr = getCountdownString(inst, inst.dueDate);
+
+                const rowId = `inst-row-${inst.id}`;
+                let existingRow = document.getElementById(rowId);
+
+                if (isTimerUpdate && existingRow) {
+                    const timerCell = existingRow.querySelector('.timer-cell');
+                    if (timerCell) timerCell.innerHTML = countdownStr;
+                    return;
+                }
+
                 const tr = document.createElement('tr');
+                tr.id = rowId;
                 tr.innerHTML = `
-                    <td>الدفعة ${inst.id}</td>
+                    <td>(#${inst.id})</td>
                     <td>${inst.dueDate}</td>
-                    <td>${formatCurrency(inst.amount)}</td>
+                    <td><strong>${formatCurrency(inst.amount)}</strong></td>
+                    <td class="timer-cell">${countdownStr}</td>
                     <td><span class="badge ${statusInfo.badgeClass}">${statusInfo.text}</span></td>
-                    <td><span class="timer-box" id="timer-${inst.id}">--:--:--</span></td>
                     <td>
-                        ${canPay ? `<button onclick="toggleInstallmentStatus(${inst.id})" style="padding: 3px 6px; font-size: 10px;">تغيير</button>` : 'معاينة'}
+                        <div style="display: flex; gap: 8px; justify-content: center; align-items: center; flex-wrap: nowrap;">
+                            <label class="check-container" title="سداد">
+                                <input type="checkbox" ${isPaid ? 'checked' : ''} ${canPay ? `onchange="toggleInstallmentPaid(${inst.id}, this.checked)"` : 'disabled'}> سداد
+                            </label>
+                            <label class="check-container" style="color:var(--danger);" title="تأخر">
+                                <input type="checkbox" ${isOverdue ? 'checked' : ''} ${canPay ? `onchange="toggleInstallmentOverdue(${inst.id}, this.checked)"` : 'disabled'}> تأخر
+                            </label>
+                        </div>
                     </td>
                 `;
                 tbody.appendChild(tr);
             });
-
-            updateTimers(contract);
         }
 
-        function updateTimers(contract) {
-            const now = new Date().getTime();
-
-            contract.installments.forEach(inst => {
-                const timerEl = document.getElementById(`timer-${inst.id}`);
-                if (!timerEl) return;
-
-                if (inst.status === 'تم السداد' || inst.status === 'مسدد') {
-                    timerEl.innerText = 'مكتمل';
-                    timerEl.style.color = 'var(--success)';
-                    return;
-                }
-
-                const dueTime = new Date(inst.dueDate + 'T23:59:59').getTime();
-                const distance = dueTime - now;
-
-                if (distance < 0) {
-                    timerEl.innerText = 'منتهية';
-                    timerEl.style.color = 'var(--danger)';
-                } else {
-                    const days = Math.floor(distance / (1000 * 60 * 60 * 24));
-                    const hours = Math.floor((distance % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
-                    const minutes = Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60));
-                    const seconds = Math.floor((distance % (1000 * 60)) / 1000);
-
-                    timerEl.innerText = `${days}d ${hours}h ${minutes}m ${seconds}s`;
-                    timerEl.style.color = 'var(--primary)';
-                }
-            });
-        }
-
-        function toggleInstallmentStatus(instId) {
+        function toggleInstallmentPaid(instId, isChecked) {
             const contract = rentals.find(r => r.id === activeModalContractId);
             if (contract) {
                 const inst = contract.installments.find(i => i.id === instId);
                 if (inst) {
-                    inst.status = (inst.status === 'تم السداد' || inst.status === 'مسدد') ? 'غير مسدد' : 'تم السداد';
+                    inst.status = isChecked ? 'تم السداد' : 'غير مسدد';
+                    if (!isChecked) inst.isOverdueFlag = false; 
                     syncToCloud();
                     renderModalInstallments(contract);
                     renderAllCentersTables();
                     checkAlerts();
+                    renderStatistics();
+                }
+            }
+        }
+
+        function toggleInstallmentOverdue(instId, isChecked) {
+            const contract = rentals.find(r => r.id === activeModalContractId);
+            if (contract) {
+                const inst = contract.installments.find(i => i.id === instId);
+                if (inst) {
+                    inst.isOverdueFlag = isChecked;
+                    syncToCloud();
+                    renderModalInstallments(contract);
+                    renderAllCentersTables();
+                    checkAlerts();
+                    renderStatistics();
                 }
             }
         }
 
         function closeModal() {
-            document.getElementById('installmentsModal').style.display = 'none';
             if (timerInterval) clearInterval(timerInterval);
+            document.getElementById('installmentsModal').style.display = 'none';
         }
 
         function checkAlerts() {
@@ -1488,18 +2210,25 @@
                     const isUrgent = item.daysLeft < 0; 
                     const daysText = item.daysLeft < 0 
                         ? `متأخرة بـ ${Math.abs(item.daysLeft)} يوم` 
-                        : (item.daysLeft === 0 ? 'مستحقة اليوم' : `${item.daysLeft} يوم متبقي`);
+                        : (item.daysLeft === 0 ? 'مستحقة اليوم' : `متبقي ${item.daysLeft} يوم`);
+
+                    const cardSymbolSvg = isUrgent 
+                        ? `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--danger)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"></path><line x1="12" y1="9" x2="12" y2="13"></line><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>`
+                        : `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--primary)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="16" x2="12" y2="12"></line><line x1="12" y1="8" x2="12.01" y2="8"></line></svg>`;
 
                     alertsGrid.innerHTML += `
                         <div class="alert-card ${isUrgent ? 'urgent' : ''}">
-                            <button class="alert-close" onclick="dismissAlert('${item.key}')">×</button>
+                            <button class="alert-close" onclick="dismissAlert('${item.key}')" title="إخفاء التنبيه">×</button>
                             <div>
-                                <div class="alert-shop"><strong>${item.brandName}</strong></div>
-                                <div class="alert-sub">محل ${item.shopNumber} (${item.centerName})</div>
+                                <div class="alert-top">
+                                    <span class="alert-icon-symbol">${cardSymbolSvg}</span>
+                                    <div class="alert-shop"><strong>${item.brandName}</strong></div>
+                                </div>
+                                <div class="alert-sub" style="padding-left: 15px;">محل ${item.shopNumber} (${item.centerName})</div>
                             </div>
                             <div class="alert-days-box">
                                 <span class="alert-days-num">${item.daysLeft <= 0 ? '!' : item.daysLeft}</span>
-                                <span style="font-size:10px; font-weight:bold; color: var(--text);">${daysText}</span>
+                                <span style="font-size:10px; font-weight:700; color: var(--text-main);">${daysText}</span>
                             </div>
                         </div>
                     `;
@@ -1540,9 +2269,9 @@
                 return;
             }
 
-            let csv = '\uFEFFالمحل,البراند,المستأجر,التواصل,المساحة,الإيجار السنوي,طريقة الدفع,تاريخ البداية,تاريخ النهاية,مضاف بواسطة,معدل بواسطة\n';
+            let csv = '\uFEFFالمحل,البراند,التصنيف,براند؟,المستأجر,التواصل,المساحة,الإيجار السنوي,طريقة الدفع,تاريخ البداية,تاريخ النهاية,مضاف بواسطة,معدل بواسطة\n';
             centerContracts.forEach(r => {
-                csv += `"${r.shopNumber}","${r.brandName}","${r.ownerName}","${r.ownerPhone}","${r.shopArea}","${r.rentAmount}","${r.paymentType}","${r.startDate}","${r.endDate || '-'}","${r.addedBy || '-'}","${r.editedBy || '-'}"\n`;
+                csv += `"${r.shopNumber}","${r.brandName}","${r.shopCategory || 'أخرى'}","${r.isBrand || 'لا'}","${r.ownerName}","${r.ownerPhone}","${r.shopArea}","${r.rentAmount}","${r.paymentType}","${r.startDate}","${r.endDate || '-'}","${r.addedBy || '-'}","${r.editedBy || '-'}"\n`;
             });
 
             const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
