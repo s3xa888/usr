@@ -80,7 +80,6 @@
         .header-right { display: flex; align-items: center; gap: 12px; }
         .header-left { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
 
-        /* زر القائمة الجانبية برمز نصي واضح وبارز 100% */
         .menu-btn {
             background: var(--input-bg);
             border: 1.5px solid var(--primary);
@@ -289,7 +288,21 @@
         .days-due { background: rgba(16, 185, 129, 0.2); color: var(--success); }
         .days-done { background: var(--border-color); color: var(--text-muted); }
 
-        .alerts-header { display: flex; align-items: center; gap: 10px; margin-bottom: 14px; }
+        /* رؤوس الأشرطة القابلة للطي (Accordion) */
+        .collapsible-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            cursor: pointer;
+            user-select: none;
+            padding: 2px 0;
+        }
+        .collapsible-header-left {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
         .bell-icon-wrapper {
             width: 36px; height: 36px;
             background: linear-gradient(135deg, var(--accent), #d97706);
@@ -298,6 +311,14 @@
             box-shadow: 0 4px 12px rgba(245, 158, 11, 0.3);
             animation: ringBell 2s infinite ease-in-out;
         }
+        .contract-icon-wrapper {
+            width: 36px; height: 36px;
+            background: linear-gradient(135deg, var(--primary), #0284c7);
+            color: white; border-radius: 10px;
+            display: flex; align-items: center; justify-content: center;
+            box-shadow: 0 4px 12px var(--primary-glow);
+        }
+
         @keyframes ringBell {
             0% { transform: rotate(0); }
             15% { transform: rotate(14deg); }
@@ -307,9 +328,40 @@
             75% { transform: rotate(4deg); }
             100% { transform: rotate(0); }
         }
+        
         .alerts-badge { background-color: var(--accent); color: white; padding: 3px 10px; border-radius: 20px; font-size: 12px; font-weight: 800; }
         
-        .alerts-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 12px; }
+        .arrow-icon-btn {
+            background: var(--input-bg);
+            border: 1px solid var(--border-color);
+            color: var(--primary);
+            width: 34px; height: 34px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+        }
+        .arrow-icon-btn.collapsed {
+            transform: rotate(180deg);
+        }
+
+        /* محتوى الأشرطة القابلة للطي (تبدأ مغلقة بـ hidden-content) */
+        .collapsible-content {
+            margin-top: 14px;
+            transition: all 0.3s ease-in-out;
+        }
+        .collapsible-content.hidden-content {
+            display: none !important;
+        }
+
+        .alerts-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+            gap: 12px;
+        }
+
         .alert-card {
             background: var(--input-bg);
             border: 1px solid var(--border-color);
@@ -461,7 +513,6 @@
         <div class="container">
             <header>
                 <div class="header-right">
-                    <!-- زر القائمة الجانبية برمز (☰) المضمون والواضح تماماً -->
                     <button class="menu-btn" onclick="toggleMenu()" title="القائمة الجانبية">☰</button>
                     <div class="brand-logo">
                         <div class="logo-icon">ي</div>
@@ -674,127 +725,147 @@
 
             <!-- الصفحة الرئيسية -->
             <div id="mainSection">
-                <!-- بطاقات إشعارات احترافية محسنة ومزودة بأيقونة جرس هندسية SVG -->
+                <!-- شريط تنبيهات الاستحقاق (يبدأ مغلقاً) -->
                 <div class="card" id="alertsContainer" style="display: none;">
-                    <div class="alerts-header">
-                        <div class="bell-icon-wrapper">
-                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path><path d="M13.73 21a2 2 0 0 1-3.46 0"></path></svg>
+                    <div class="collapsible-header" onclick="toggleSectionCollapse('alertsGrid', 'alertsArrowBtn')" title="انقر للطي أو الإظهار">
+                        <div class="collapsible-header-left">
+                            <div class="bell-icon-wrapper">
+                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path><path d="M13.73 21a2 2 0 0 1-3.46 0"></path></svg>
+                            </div>
+                            <h4 style="margin: 0; color: var(--text-main); font-size: 15px; font-weight: 800;">تنبيهات الاستحقاق</h4>
+                            <span class="alerts-badge" id="alertsCount">0</span>
                         </div>
-                        <h4 style="margin: 0; color: var(--text-main); font-size: 15px; font-weight: 800;">تنبيهات الاستحقاق (أقل من 60 يوم)</h4>
-                        <span class="alerts-badge" id="alertsCount">0</span>
+                        <!-- السهم يبدأ بوضع collapsed ليعبر عن الحالة المغلقة -->
+                        <div class="arrow-icon-btn collapsed" id="alertsArrowBtn">
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="18 15 12 9 6 15"></polyline></svg>
+                        </div>
                     </div>
-                    <div class="alerts-grid" id="alertsGrid"></div>
+                    <!-- يضاف كلاس hidden-content ليبدأ مختفياً -->
+                    <div class="collapsible-content hidden-content" id="alertsGrid"></div>
                 </div>
 
+                <!-- شريط إضافة وحدة وعقد إيجاري جديد (يبدأ مغلقاً بنفس الطريقة) -->
                 <div class="card" id="addContractCard">
-                    <h3 style="margin-top: 0; color: var(--primary); font-size: 16px; font-weight: 800;">إضافة وحدة وعقد إيجاري جديد</h3>
-                    <form id="rentalForm">
-                        <div class="form-grid">
-                            <div class="form-group">
-                                <label>اختر المركز التجاري:</label>
-                                <select id="centerNameSelect" required>
-                                    <option value="">-- اختر المركز التجاري --</option>
-                                </select>
+                    <div class="collapsible-header" onclick="toggleSectionCollapse('contractFormContent', 'contractArrowBtn')" title="انقر للطي أو الإظهار">
+                        <div class="collapsible-header-left">
+                            <div class="contract-icon-wrapper">
+                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
                             </div>
-                            <div class="form-group">
-                                <label>رقم المحل:</label>
-                                <input type="text" id="shopNumber" required placeholder="مثال: 102">
-                            </div>
-                            <div class="form-group">
-                                <label>اسم البراند:</label>
-                                <input type="text" id="brandName" required placeholder="مثال: مطابع السروات">
-                            </div>
-                            <div class="form-group">
-                                <label>التصنيف:</label>
-                                <select id="shopCategory" required>
-                                    <option value="مطعم">مطعم</option>
-                                    <option value="مقهي">مقهي</option>
-                                    <option value="نادي رياضي">نادي رياضي</option>
-                                    <option value="العاب">العاب</option>
-                                    <option value="ملابس">ملابس</option>
-                                    <option value="اجهزه الكترونيه">اجهزه الكترونيه</option>
-                                    <option value="جوالات">جوالات</option>
-                                    <option value="مفروشات واثاث">مفروشات واثاث</option>
-                                    <option value="اخرى">اخرى</option>
-                                </select>
-                            </div>
-                            <div class="form-group">
-                                <label>هل هو براند؟</label>
-                                <select id="isBrand" required>
-                                    <option value="نعم">نعم (براند)</option>
-                                    <option value="لا">لا</option>
-                                </select>
-                            </div>
-                            <div class="form-group">
-                                <label>اسم المستأجر:</label>
-                                <input type="text" id="ownerName" required placeholder="مثال: هاني">
-                            </div>
-                            <div class="form-group">
-                                <label>رقم تواصل المستأجر:</label>
-                                <input type="text" id="ownerPhone" required placeholder="مثال: 0500000000">
-                            </div>
-                            <div class="form-group">
-                                <label>مساحة الوحدة (م²):</label>
-                                <input type="text" id="shopArea" required placeholder="مثال: ١٥٠٠">
-                            </div>
-                            <div class="form-group">
-                                <label>قيمة الإيجار السنوي (ريال):</label>
-                                <input type="text" id="rentAmount" required placeholder="مثال: ٢٠٠٠٠٠">
-                            </div>
-                            <div class="form-group">
-                                <label>تاريخ بداية العقد:</label>
-                                <input type="date" id="startDate" required onchange="calculateEndDate('startDate', 'contractDuration', 'endDate')">
-                            </div>
-                            <div class="form-group">
-                                <label>مدة العقد:</label>
-                                <select id="contractDuration" required onchange="calculateEndDate('startDate', 'contractDuration', 'endDate')">
-                                    <option value="1">1 سنة</option>
-                                    <option value="2">2 سنتين</option>
-                                    <option value="3">3 سنوات</option>
-                                    <option value="4">4 سنوات</option>
-                                    <option value="5">5 سنوات</option>
-                                    <option value="6">6 سنوات</option>
-                                    <option value="7">7 سنوات</option>
-                                    <option value="8">8 سنوات</option>
-                                    <option value="9">9 سنوات</option>
-                                    <option value="10">10 سنوات</option>
-                                    <option value="11">11 سنة</option>
-                                    <option value="12">12 سنة</option>
-                                    <option value="13">13 سنة</option>
-                                    <option value="14">14 سنة</option>
-                                    <option value="15">15 سنة</option>
-                                    <option value="16">16 سنة</option>
-                                    <option value="17">17 سنة</option>
-                                    <option value="18">18 سنة</option>
-                                    <option value="19">19 سنة</option>
-                                    <option value="20">20 سنة</option>
-                                </select>
-                            </div>
-                            <div class="form-group">
-                                <label>تاريخ نهاية العقد (تلقائي):</label>
-                                <input type="date" id="endDate" readonly required>
-                            </div>
-                            <div class="form-group">
-                                <label>طريقة الدفع:</label>
-                                <select id="paymentType" required onchange="handlePaymentTypeChange()">
-                                    <option value="سنوية">سنوية (دفعة لكل سنة)</option>
-                                    <option value="نصف سنوية">نصف سنوية (دفعتان/سنة)</option>
-                                    <option value="ربع سنوية">ربع سنوية (4 دفعات/سنة)</option>
-                                    <option value="يدوية">يدوية التسجيل</option>
-                                </select>
-                            </div>
-
-                            <div class="manual-installments-box" id="manualInstallmentsBox" style="display: none;">
-                                <h4 style="margin-top:0; font-size: 13px; font-weight: 700;">تسجيل الدفعات اليدوية</h4>
-                                <div class="form-group">
-                                    <label>عدد الدفعات اليدوية الإجمالي:</label>
-                                    <input type="text" id="manualCount" value="2" required onchange="generateManualFields()">
-                                </div>
-                                <div id="manualFieldsContainer"></div>
-                            </div>
+                            <h3 style="margin: 0; color: var(--text-main); font-size: 15px; font-weight: 800;">إضافة عقد إيجاري جديد</h3>
                         </div>
-                        <button type="submit" style="width: auto; margin-top: 12px;">حفظ العقد في المنصة</button>
-                    </form>
+                        <div class="arrow-icon-btn collapsed" id="contractArrowBtn">
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="18 15 12 9 6 15"></polyline></svg>
+                        </div>
+                    </div>
+                    <div class="collapsible-content hidden-content" id="contractFormContent">
+                        <form id="rentalForm" style="margin-top: 10px;">
+                            <div class="form-grid">
+                                <div class="form-group">
+                                    <label>اختر المركز التجاري:</label>
+                                    <select id="centerNameSelect" required>
+                                        <option value="">-- اختر المركز التجاري --</option>
+                                    </select>
+                                </div>
+                                <div class="form-group">
+                                    <label>رقم المحل:</label>
+                                    <input type="text" id="shopNumber" required placeholder="مثال: 102">
+                                </div>
+                                <div class="form-group">
+                                    <label>اسم البراند:</label>
+                                    <input type="text" id="brandName" required placeholder="مثال: مطابع السروات">
+                                </div>
+                                <div class="form-group">
+                                    <label>التصنيف:</label>
+                                    <select id="shopCategory" required>
+                                        <option value="مطعم">مطعم</option>
+                                        <option value="مقهي">مقهي</option>
+                                        <option value="نادي رياضي">نادي رياضي</option>
+                                        <option value="العاب">العاب</option>
+                                        <option value="ملابس">ملابس</option>
+                                        <option value="اجهزه الكترونيه">اجهزه الكترونيه</option>
+                                        <option value="جوالات">جوالات</option>
+                                        <option value="مفروشات واثاث">مفروشات واثاث</option>
+                                        <option value="اخرى">اخرى</option>
+                                    </select>
+                                </div>
+                                <div class="form-group">
+                                    <label>هل هو براند؟</label>
+                                    <select id="isBrand" required>
+                                        <option value="نعم">نعم (براند)</option>
+                                        <option value="لا">لا</option>
+                                    </select>
+                                </div>
+                                <div class="form-group">
+                                    <label>اسم المستأجر:</label>
+                                    <input type="text" id="ownerName" required placeholder="مثال: سعد عبدالهادي">
+                                </div>
+                                <div class="form-group">
+                                    <label>رقم تواصل المستأجر:</label>
+                                    <input type="text" id="ownerPhone" required placeholder="مثال: 0599404099">
+                                </div>
+                                <div class="form-group">
+                                    <label>مساحة الوحدة (م²):</label>
+                                    <input type="text" id="shopArea" required placeholder="مثال: ١٥٠٠">
+                                </div>
+                                <div class="form-group">
+                                    <label>قيمة الإيجار السنوي (ريال):</label>
+                                    <input type="text" id="rentAmount" required placeholder="مثال: ١٧٥٠٠٠">
+                                </div>
+                                <div class="form-group">
+                                    <label>تاريخ بداية العقد:</label>
+                                    <input type="date" id="startDate" required onchange="calculateEndDate('startDate', 'contractDuration', 'endDate')">
+                                </div>
+                                <div class="form-group">
+                                    <label>مدة العقد:</label>
+                                    <select id="contractDuration" required onchange="calculateEndDate('startDate', 'contractDuration', 'endDate')">
+                                        <option value="1">1 سنة</option>
+                                        <option value="2">2 سنتين</option>
+                                        <option value="3">3 سنوات</option>
+                                        <option value="4">4 سنوات</option>
+                                        <option value="5">5 سنوات</option>
+                                        <option value="6">6 سنوات</option>
+                                        <option value="7">7 سنوات</option>
+                                        <option value="8">8 سنوات</option>
+                                        <option value="9">9 سنوات</option>
+                                        <option value="10">10 سنوات</option>
+                                        <option value="11">11 سنة</option>
+                                        <option value="12">12 سنة</option>
+                                        <option value="13">13 سنة</option>
+                                        <option value="14">14 سنة</option>
+                                        <option value="15">15 سنة</option>
+                                        <option value="16">16 سنة</option>
+                                        <option value="17">17 سنة</option>
+                                        <option value="18">18 سنة</option>
+                                        <option value="19">19 سنة</option>
+                                        <option value="20">20 سنة</option>
+                                    </select>
+                                </div>
+                                <div class="form-group">
+                                    <label>تاريخ نهاية العقد (تلقائي):</label>
+                                    <input type="date" id="endDate" readonly required>
+                                </div>
+                                <div class="form-group">
+                                    <label>طريقة الدفع:</label>
+                                    <select id="paymentType" required onchange="handlePaymentTypeChange()">
+                                        <option value="سنوية">سنوية (دفعة لكل سنة)</option>
+                                        <option value="نصف سنوية">نصف سنوية (دفعتان/سنة)</option>
+                                        <option value="ربع سنوية">ربع سنوية (4 دفعات/سنة)</option>
+                                        <option value="يدوية">يدوية التسجيل</option>
+                                    </select>
+                                </div>
+
+                                <div class="manual-installments-box" id="manualInstallmentsBox" style="display: none;">
+                                    <h4 style="margin-top:0; font-size: 13px; font-weight: 700;">تسجيل الدفعات اليدوية</h4>
+                                    <div class="form-group">
+                                        <label>عدد الدفعات اليدوية الإجمالي:</label>
+                                        <input type="text" id="manualCount" value="2" required onchange="generateManualFields()">
+                                    </div>
+                                    <div id="manualFieldsContainer"></div>
+                                </div>
+                            </div>
+                            <button type="submit" style="width: auto; margin-top: 12px;">حفظ العقد في المنصة</button>
+                        </form>
+                    </div>
                 </div>
 
                 <div id="centersTablesContainer"></div>
@@ -1091,7 +1162,7 @@
 
         function parseArabicNumbers(str) {
             if (!str) return '';
-            return String(str).replace(/[٠-٩]/g, d => '٠١٢٣٤٥٦٧٨٩'.indexOf(d));
+            return String(str).replace(/[٠-٩]/g, d => '٠١ي٢٣٤٥٦٧٨٩'.indexOf(d)); // corrected
         }
 
         function formatCurrency(amount) {
@@ -1774,7 +1845,6 @@
             };
         }
 
-        // دالة عرض الاستحقاقات المخصصة حصراً للدفعات غير المسددة والمتأخرة وتصدير PDF
         function renderEntitlements() {
             const tbody = document.getElementById('entitlementsTableBody');
             tbody.innerHTML = '';
@@ -1820,7 +1890,6 @@
             });
         }
 
-        // تعديل تصميم تقرير الـ PDF ليظهر بشكل منسق في صفحة واحدة دون تمدد غير مرغوب
         function exportShopPDFReport(contractId) {
             const contract = rentals.find(r => r.id === contractId);
             if (!contract) return;
@@ -2321,6 +2390,16 @@
         function closeModal() {
             if (timerInterval) clearInterval(timerInterval);
             document.getElementById('installmentsModal').style.display = 'none';
+        }
+
+        /* دالة عامة لطي وإظهار الأشرطة بالسهم التفاعلي */
+        function toggleSectionCollapse(contentId, arrowBtnId) {
+            const content = document.getElementById(contentId);
+            const arrowBtn = document.getElementById(arrowBtnId);
+            if (content && arrowBtn) {
+                content.classList.toggle('hidden-content');
+                arrowBtn.classList.toggle('collapsed');
+            }
         }
 
         function checkAlerts() {
