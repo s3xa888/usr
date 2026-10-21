@@ -4,10 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>منصة يسرُ - إدارة الإيجارات والمراكز التجارية</title>
-    <!-- مكتبات Firebase السحابية -->
     <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-database-compat.js"></script>
-    <!-- مكتبة الرسوم البيانية Chart.js -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@300;400;500;700;900&display=swap" rel="stylesheet">
     <style>
@@ -275,9 +273,43 @@
         }
         .password-toggle-btn:hover, .table-eye-btn:hover { color: var(--primary); }
 
-        .status-star { font-size: 18px; font-weight: bold; }
-        .star-red { color: var(--danger); }
-        .star-green { color: var(--success); }
+        /* أنماط واهتزاز الأيقونات الجديدة للحالة */
+        @keyframes shakeIcon {
+            0% { transform: translate(0, 0) rotate(0deg); }
+            20% { transform: translate(-2px, 2px) rotate(-5deg); }
+            40% { transform: translate(2px, -2px) rotate(5deg); }
+            60% { transform: translate(-2px, -2px) rotate(-3deg); }
+            80% { transform: translate(2px, 2px) rotate(3deg); }
+            100% { transform: translate(0, 0) rotate(0deg); }
+        }
+
+        .status-icon-wrapper {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 28px;
+            height: 28px;
+            border-radius: 50%;
+            vertical-align: middle;
+        }
+        .status-icon-shake {
+            animation: shakeIcon 0.4s infinite ease-in-out;
+        }
+        .status-icon-red {
+            background-color: rgba(239, 68, 68, 0.15);
+            border: 1.5px solid var(--danger);
+            color: var(--danger);
+        }
+        .status-icon-orange {
+            background-color: rgba(245, 158, 11, 0.15);
+            border: 1.5px solid var(--accent);
+            color: var(--accent);
+        }
+        .status-icon-green {
+            background-color: rgba(16, 185, 129, 0.15);
+            border: 1.5px solid var(--success);
+            color: var(--success);
+        }
 
         .next-installment-box { display: flex; flex-direction: column; align-items: center; gap: 3px; font-size: 11px; }
         .next-inst-amount { font-weight: 800; color: var(--primary); }
@@ -288,7 +320,6 @@
         .days-due { background: rgba(16, 185, 129, 0.2); color: var(--success); }
         .days-done { background: var(--border-color); color: var(--text-muted); }
 
-        /* رؤوس الأشرطة القابلة للطي (Accordion) */
         .collapsible-header {
             display: flex;
             align-items: center;
@@ -347,7 +378,6 @@
             transform: rotate(180deg);
         }
 
-        /* محتوى الأشرطة القابلة للطي (تبدأ مغلقة بـ hidden-content) */
         .collapsible-content {
             margin-top: 14px;
             transition: all 0.3s ease-in-out;
@@ -357,17 +387,20 @@
         }
 
         .alerts-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
-            gap: 12px;
+            display: grid !important;
+            grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)) !important;
+            gap: 14px !important;
+            padding: 4px 2px 10px 2px !important;
+            width: 100% !important;
         }
-
+        
         .alert-card {
+            width: 100% !important;
             background: var(--input-bg);
             border: 1px solid var(--border-color);
             border-right: 4px solid var(--success);
             border-radius: var(--radius-md);
-            padding: 14px;
+            padding: 12px;
             display: flex;
             flex-direction: column;
             justify-content: space-between;
@@ -388,9 +421,9 @@
         .alert-close:hover { background: var(--danger); color: white; border-color: var(--danger); }
         
         .alert-top { display: flex; align-items: center; gap: 8px; margin-bottom: 8px; padding-left: 15px; }
-        .alert-icon-symbol { display: flex; align-items: center; justify-content: center; }
+        .alert-icon-symbol { display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
         .alert-shop { font-size: 13px; font-weight: 800; color: var(--text-main); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-        .alert-sub { font-size: 10px; color: var(--text-muted); }
+        .alert-sub { font-size: 10px; color: var(--text-muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
         
         .alert-days-box {
             display: flex; justify-content: space-between; align-items: center;
@@ -481,7 +514,6 @@
         <div class="menu-item admin-only" id="menuManageUsers" onclick="showSection('manageUsers')">إدارة الحسابات التابعة</div>
     </div>
 
-    <!-- تسجيل الدخول -->
     <div id="authScreen">
         <div class="auth-card">
             <div class="brand-logo" style="justify-content: center; margin-bottom: 16px;">
@@ -508,7 +540,6 @@
         </div>
     </div>
 
-    <!-- التطبيق الرئيسي -->
     <div id="appScreen">
         <div class="container">
             <header>
@@ -532,7 +563,6 @@
                 </div>
             </header>
 
-            <!-- مراكزي التجارية -->
             <div class="card" id="centersSection" style="display: none;">
                 <h3 style="margin-top: 0; color: var(--primary); font-size: 16px; font-weight: 800;">مراكزي التجارية</h3>
                 
@@ -548,7 +578,6 @@
                 <div class="centers-grid" id="centersGrid"></div>
             </div>
 
-            <!-- قسم الاستحقاقات (مخصص للدفعات غير المسددة والمتأخرة فقط) -->
             <div class="card" id="entitlementsSection" style="display: none;">
                 <div class="actions-bar">
                     <h3 style="margin: 0; color: var(--primary); font-size: 16px; font-weight: 800;">الاستحقاقات (الدفعات غير المسددة والمتأخرة فقط)</h3>
@@ -571,7 +600,6 @@
                 </div>
             </div>
 
-            <!-- قسم الإحصائيات -->
             <div id="statisticsSection" style="display: none;">
                 <div class="card">
                     <h3 style="margin-top: 0; color: var(--primary); font-size: 16px; font-weight: 800; display: flex; align-items: center; gap: 8px;">
@@ -636,7 +664,6 @@
                     </div>
                 </div>
 
-                <!-- قائمة المتعثرين -->
                 <div class="card" style="border: 1px solid var(--danger); background-color: rgba(239, 68, 68, 0.03);">
                     <h4 style="color: var(--danger); margin-top:0; font-size: 15px; font-weight: 700; display: flex; align-items: center; gap: 8px;">
                         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"></path><line x1="12" y1="9" x2="12" y2="13"></line><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>
@@ -659,7 +686,6 @@
                     </div>
                 </div>
 
-                <!-- إحصائية المتعثرين برسم بياني عمودي أسفل القائمة مباشرة -->
                 <div class="card" style="border: 1px solid var(--danger); background-color: rgba(239, 68, 68, 0.02);">
                     <h4 style="color: var(--danger); margin-top:0; font-size: 15px; font-weight: 700; display: flex; align-items: center; gap: 8px;">
                         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="20" x2="18" y2="10"></line><line x1="12" y1="20" x2="12" y2="4"></line><line x1="6" y1="20" x2="6" y2="14"></line></svg>
@@ -671,7 +697,6 @@
                 </div>
             </div>
 
-            <!-- إنشاء حساب تابع -->
             <div class="card" id="subAccountSection" style="display: none; border: 1px solid var(--primary);">
                 <h3 style="margin-top: 0; color: var(--primary); font-size: 16px; font-weight: 800;">إنشاء حساب تابع جديد والتحكم بالصلاحيات</h3>
                 <form id="subAccountForm">
@@ -704,7 +729,6 @@
                 </form>
             </div>
 
-            <!-- إدارة الحسابات التابعة -->
             <div class="card" id="manageUsersSection" style="display: none;">
                 <h3 style="margin-top: 0; color: var(--primary); font-size: 16px; font-weight: 800;">إدارة الحسابات التابعة والتعديل عليها</h3>
                 <div class="table-responsive">
@@ -723,9 +747,7 @@
                 </div>
             </div>
 
-            <!-- الصفحة الرئيسية -->
             <div id="mainSection">
-                <!-- شريط تنبيهات الاستحقاق (يبدأ مغلقاً) -->
                 <div class="card" id="alertsContainer" style="display: none;">
                     <div class="collapsible-header" onclick="toggleSectionCollapse('alertsGrid', 'alertsArrowBtn')" title="انقر للطي أو الإظهار">
                         <div class="collapsible-header-left">
@@ -735,16 +757,13 @@
                             <h4 style="margin: 0; color: var(--text-main); font-size: 15px; font-weight: 800;">تنبيهات الاستحقاق</h4>
                             <span class="alerts-badge" id="alertsCount">0</span>
                         </div>
-                        <!-- السهم يبدأ بوضع collapsed ليعبر عن الحالة المغلقة -->
                         <div class="arrow-icon-btn collapsed" id="alertsArrowBtn">
                             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="18 15 12 9 6 15"></polyline></svg>
                         </div>
                     </div>
-                    <!-- يضاف كلاس hidden-content ليبدأ مختفياً -->
                     <div class="collapsible-content hidden-content" id="alertsGrid"></div>
                 </div>
 
-                <!-- شريط إضافة وحدة وعقد إيجاري جديد (يبدأ مغلقاً بنفس الطريقة) -->
                 <div class="card" id="addContractCard">
                     <div class="collapsible-header" onclick="toggleSectionCollapse('contractFormContent', 'contractArrowBtn')" title="انقر للطي أو الإظهار">
                         <div class="collapsible-header-left">
@@ -769,6 +788,15 @@
                                 <div class="form-group">
                                     <label>رقم المحل:</label>
                                     <input type="text" id="shopNumber" required placeholder="مثال: 102">
+                                </div>
+                                <!-- حقل الحالة الجديد -->
+                                <div class="form-group">
+                                    <label>حالة المحل / المتجر:</label>
+                                    <select id="shopStatus" required>
+                                        <option value="غير مؤجر">غير مؤجر</option>
+                                        <option value="مؤجر ومغلق">مؤجر ومغلق</option>
+                                        <option value="مؤجر ومفتوح">مؤجر ومفتوح</option>
+                                    </select>
                                 </div>
                                 <div class="form-group">
                                     <label>اسم البراند:</label>
@@ -873,7 +901,6 @@
         </div>
     </div>
 
-    <!-- نافذة تعديل العقد والدفعات اليدوية -->
     <div class="modal" id="editContractModal">
         <div class="modal-content">
             <h3 style="color: var(--primary); margin-top:0; font-size: 16px; font-weight: 800;">تعديل بيانات العقد بالكامل</h3>
@@ -887,6 +914,15 @@
                     <div class="form-group">
                         <label>رقم المحل:</label>
                         <input type="text" id="editShopNumber" required>
+                    </div>
+                    <!-- حقل تعديل الحالة -->
+                    <div class="form-group">
+                        <label>حالة المحل / المتجر:</label>
+                        <select id="editShopStatus" required>
+                            <option value="غير مؤجر">غير مؤجر</option>
+                            <option value="مؤجر ومغلق">مؤجر ومغلق</option>
+                            <option value="مؤجر ومفتوح">مؤجر ومفتوح</option>
+                        </select>
                     </div>
                     <div class="form-group">
                         <label>اسم البراند:</label>
@@ -989,7 +1025,6 @@
         </div>
     </div>
 
-    <!-- نافذة تعديل الحساب -->
     <div class="modal" id="editUserModal">
         <div class="modal-content" style="max-width: 420px;">
             <h3 style="color: var(--primary); margin-top:0; font-size: 16px; font-weight: 800;">تعديل بيانات الحساب التابع</h3>
@@ -1024,7 +1059,6 @@
         </div>
     </div>
 
-    <!-- نافذة تفاصيل الدفعات والمؤقت التنازلي -->
     <div class="modal" id="installmentsModal">
         <div class="modal-content">
             <h3 style="color: var(--primary); margin-top:0; font-size: 16px; font-weight: 800;" id="modalContractTitle">تفاصيل دفعات العقد</h3>
@@ -1162,7 +1196,7 @@
 
         function parseArabicNumbers(str) {
             if (!str) return '';
-            return String(str).replace(/[٠-٩]/g, d => '٠١ي٢٣٤٥٦٧٨٩'.indexOf(d)); // corrected
+            return String(str).replace(/[٠-٩]/g, d => '٠١ي٢٣٤٥٦٧٨٩'.indexOf(d));
         }
 
         function formatCurrency(amount) {
@@ -1561,6 +1595,7 @@
             const durationYears = parseInt(document.getElementById('contractDuration').value) || 1;
             const endDateStr = document.getElementById('endDate').value;
             const pType = document.getElementById('paymentType').value;
+            const shopStatusVal = document.getElementById('shopStatus').value;
 
             if (!startDateStr || !endDateStr) {
                 alert('يرجى التأكد من اختيار تاريخ بداية العقد.');
@@ -1601,6 +1636,7 @@
                 id: Date.now(),
                 centerName: selectedCenter,
                 shopNumber: parseArabicNumbers(document.getElementById('shopNumber').value.trim()),
+                shopStatus: shopStatusVal,
                 brandName: document.getElementById('brandName').value.trim(),
                 shopCategory: document.getElementById('shopCategory').value,
                 isBrand: document.getElementById('isBrand').value,
@@ -1634,6 +1670,7 @@
             document.getElementById('editContractId').value = contract.id;
             document.getElementById('editCenterNameSelect').value = contract.centerName;
             document.getElementById('editShopNumber').value = contract.shopNumber;
+            document.getElementById('editShopStatus').value = contract.shopStatus || 'غير مؤجر';
             document.getElementById('editBrandName').value = contract.brandName;
             document.getElementById('editShopCategory').value = contract.shopCategory || 'اخرى';
             document.getElementById('editIsBrand').value = contract.isBrand || 'لا';
@@ -1679,6 +1716,7 @@
 
                 contract.centerName = document.getElementById('editCenterNameSelect').value;
                 contract.shopNumber = parseArabicNumbers(document.getElementById('editShopNumber').value.trim());
+                contract.shopStatus = document.getElementById('editShopStatus').value;
                 contract.brandName = document.getElementById('editBrandName').value.trim();
                 contract.shopCategory = document.getElementById('editShopCategory').value;
                 contract.isBrand = document.getElementById('editIsBrand').value;
@@ -1813,28 +1851,24 @@
 
             let daysText = '';
             let daysClass = 'days-normal';
-            let starHtml = '';
+            let statusHtml = '';
 
             if (next.isOverdueFlag) {
                 daysText = 'متأخر';
                 daysClass = 'days-urgent';
-                starHtml = '<span class="status-star star-red" title="دفعة متأخرة">*</span>';
             } else if (diffDays < 0) {
                 daysText = `متأخرة بـ ${Math.abs(diffDays)} يوم`;
                 daysClass = 'days-urgent';
-                starHtml = '<span class="status-star star-red" title="دفعة متأخرة">*</span>';
             } else if (diffDays === 0) {
                 daysText = 'مستحقة اليوم';
                 daysClass = 'days-due';
-                starHtml = '<span class="status-star star-green" title="الدفعة حانت اليوم">*</span>';
             } else {
                 daysText = `متبقي ${diffDays} يوم`;
                 daysClass = 'days-normal';
-                starHtml = ''; 
             }
 
             return {
-                starHtml: starHtml,
+                statusHtml: statusHtml,
                 html: `
                     <div class="next-installment-box">
                         <span class="next-inst-amount">${formatCurrency(next.amount)}</span>
@@ -2220,9 +2254,41 @@
                             ? '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--success)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>' 
                             : '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--text-muted)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>';
 
+                        // توليد الأيقونة والشكل حسب الحالة الجديدة المطلوبة بدلاً من الـ *
+                        let statusHtml = '';
+                        const sState = item.shopStatus || 'غير مؤجر';
+                        if (sState === 'غير مؤجر') {
+                            statusHtml = `
+                                <div style="display:inline-flex; align-items:center; gap:6px;" title="غير مؤجر">
+                                    <span class="status-icon-wrapper status-icon-red status-icon-shake">
+                                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="12"></line><line x1="12" y1="16" x2="12.01" y2="16"></line></svg>
+                                    </span>
+                                    <span style="font-size:11px; font-weight:700; color:var(--danger);">غير مؤجر</span>
+                                </div>
+                            `;
+                        } else if (sState === 'مؤجر ومغلق') {
+                            statusHtml = `
+                                <div style="display:inline-flex; align-items:center; gap:6px;" title="مؤجر ومغلق">
+                                    <span class="status-icon-wrapper status-icon-orange status-icon-shake">
+                                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="12"></line><line x1="12" y1="16" x2="12.01" y2="16"></line></svg>
+                                    </span>
+                                    <span style="font-size:11px; font-weight:700; color:var(--accent);">مؤجر ومغلق</span>
+                                </div>
+                            `;
+                        } else {
+                            statusHtml = `
+                                <div style="display:inline-flex; align-items:center; gap:6px;" title="مؤجر ومفتوح">
+                                    <span class="status-icon-wrapper status-icon-green">
+                                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg>
+                                    </span>
+                                    <span style="font-size:11px; font-weight:700; color:var(--success);">مؤجر ومفتوح</span>
+                                </div>
+                            `;
+                        }
+
                         tableRowsHtml += `
                             <tr>
-                                <td>${nextInst.starHtml}</td>
+                                <td>${statusHtml}</td>
                                 <td><strong>${item.shopNumber}</strong></td>
                                 <td><strong style="font-weight: 800; color: var(--primary);">${item.brandName}</strong></td>
                                 <td><span style="background:var(--input-bg); border: 1px solid var(--border-color); padding:3px 6px; border-radius:6px; font-size:11px;">${item.shopCategory || 'أخرى'}</span></td>
@@ -2262,7 +2328,7 @@
                         <table>
                             <thead>
                                 <tr>
-                                    <th>#</th>
+                                    <th>الحالة</th>
                                     <th>المحل</th>
                                     <th>البراند</th>
                                     <th>التصنيف</th>
@@ -2392,7 +2458,6 @@
             document.getElementById('installmentsModal').style.display = 'none';
         }
 
-        /* دالة عامة لطي وإظهار الأشرطة بالسهم التفاعلي */
         function toggleSectionCollapse(contentId, arrowBtnId) {
             const content = document.getElementById(contentId);
             const arrowBtn = document.getElementById(arrowBtnId);
@@ -2459,9 +2524,9 @@
                             <div>
                                 <div class="alert-top">
                                     <span class="alert-icon-symbol">${cardSymbolSvg}</span>
-                                    <div class="alert-shop"><strong>${item.brandName}</strong></div>
+                                    <div class="alert-shop" title="${item.brandName}"><strong>${item.brandName}</strong></div>
                                 </div>
-                                <div class="alert-sub" style="padding-left: 15px;">محل ${item.shopNumber} (${item.centerName})</div>
+                                <div class="alert-sub" style="padding-left: 15px;" title="محل ${item.shopNumber} (${item.centerName})">محل ${item.shopNumber} (${item.centerName})</div>
                             </div>
                             <div class="alert-days-box">
                                 <span class="alert-days-num">${item.daysLeft <= 0 ? '!' : item.daysLeft}</span>
@@ -2507,9 +2572,9 @@
                 return;
             }
 
-            let csv = '\uFEFFالمحل,البراند,التصنيف,براند؟,المستأجر,التواصل,المساحة,الإيجار السنوي,طريقة الدفع,تاريخ البداية,تاريخ النهاية,مضاف بواسطة,معدل بواسطة\n';
+            let csv = '\uFEFFالحالة,المحل,البراند,التصنيف,براند؟,المستأجر,التواصل,المساحة,الإيجار السنوي,طريقة الدفع,تاريخ البداية,تاريخ النهاية,مضاف بواسطة,معدل بواسطة\n';
             centerContracts.forEach(r => {
-                csv += `"${r.shopNumber}","${r.brandName}","${r.shopCategory || 'أخرى'}","${r.isBrand || 'لا'}","${r.ownerName}","${r.ownerPhone}","${r.shopArea}","${r.rentAmount}","${r.paymentType}","${r.startDate}","${r.endDate || '-'}","${r.addedBy || '-'}","${r.editedBy || '-'}"\n`;
+                csv += `"${r.shopStatus || 'غير مؤجر'}","${r.shopNumber}","${r.brandName}","${r.shopCategory || 'أخرى'}","${r.isBrand || 'لا'}","${r.ownerName}","${r.ownerPhone}","${r.shopArea}","${r.rentAmount}","${r.paymentType}","${r.startDate}","${r.endDate || '-'}","${r.addedBy || '-'}","${r.editedBy || '-'}"\n`;
             });
 
             const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
