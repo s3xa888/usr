@@ -273,7 +273,6 @@
         }
         .password-toggle-btn:hover, .table-eye-btn:hover { color: var(--primary); }
 
-        /* أنماط واهتزاز الأيقونات الجديدة للحالة */
         @keyframes shakeIcon {
             0% { transform: translate(0, 0) rotate(0deg); }
             20% { transform: translate(-2px, 2px) rotate(-5deg); }
@@ -386,16 +385,19 @@
             display: none !important;
         }
 
+        /* استعادة تنسيق شبكة التنبيهات الأصلية المنتظمة مثل v1.3 */
         .alerts-grid {
             display: grid !important;
-            grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)) !important;
-            gap: 14px !important;
-            padding: 4px 2px 10px 2px !important;
+            grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)) !important;
+            gap: 12px !important;
             width: 100% !important;
+            padding: 4px 0 !important;
         }
         
         .alert-card {
             width: 100% !important;
+            min-width: 0 !important;
+            max-width: none !important;
             background: var(--input-bg);
             border: 1px solid var(--border-color);
             border-right: 4px solid var(--success);
@@ -408,29 +410,29 @@
             box-shadow: 0 4px 15px rgba(0,0,0,0.1);
             transition: var(--transition);
         }
-        .alert-card:hover { transform: translateY(-2px); border-color: var(--primary); }
+        .alert-card:hover { transform: translateY(-3px); border-color: var(--primary); box-shadow: 0 8px 25px rgba(14, 165, 233, 0.15); }
         .alert-card.urgent { border-right-color: var(--danger); background: linear-gradient(135deg, var(--input-bg), rgba(239, 68, 68, 0.04)); }
         
         .alert-close {
             position: absolute; top: 6px; left: 8px;
             background: rgba(255,255,255,0.05); border: 1px solid var(--border-color);
-            color: var(--text-muted); font-size: 12px; font-weight: bold; cursor: pointer;
+            color: var(--text-muted); font-size: 11px; font-weight: bold; cursor: pointer;
             width: 20px; height: 20px; border-radius: 50%; display: flex; align-items: center; justify-content: center;
             transition: var(--transition);
         }
         .alert-close:hover { background: var(--danger); color: white; border-color: var(--danger); }
         
-        .alert-top { display: flex; align-items: center; gap: 8px; margin-bottom: 8px; padding-left: 15px; }
+        .alert-top { display: flex; align-items: center; gap: 8px; margin-bottom: 6px; padding-left: 16px; }
         .alert-icon-symbol { display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
         .alert-shop { font-size: 13px; font-weight: 800; color: var(--text-main); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-        .alert-sub { font-size: 10px; color: var(--text-muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .alert-sub { font-size: 10px; color: var(--text-muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; padding-left: 4px; }
         
         .alert-days-box {
             display: flex; justify-content: space-between; align-items: center;
             background: var(--bg-card); padding: 6px 10px;
-            border-radius: 8px; border: 1px solid var(--border-color); margin-top: 4px;
+            border-radius: 6px; border: 1px solid var(--border-color); margin-top: 6px;
         }
-        .alert-days-num { font-size: 13px; font-weight: 800; color: var(--success); }
+        .alert-days-num { font-size: 12px; font-weight: 800; color: var(--success); }
         .alert-card.urgent .alert-days-num { color: var(--danger); }
 
         .table-responsive { width: 100%; overflow-x: auto; -webkit-overflow-scrolling: touch; }
@@ -490,7 +492,7 @@
         .installments-table { width: 100%; min-width: 650px; table-layout: auto; }
         .installments-table th, .installments-table td { padding: 10px 10px; font-size: 11px; }
 
-        @media (max-width: 768px) {
+        @media (max-width: 600px) {
             .container { padding: 10px; }
             header { padding: 10px 14px; }
             .brand-title { font-size: 15px; }
@@ -789,7 +791,6 @@
                                     <label>رقم المحل:</label>
                                     <input type="text" id="shopNumber" required placeholder="مثال: 102">
                                 </div>
-                                <!-- حقل الحالة الجديد -->
                                 <div class="form-group">
                                     <label>حالة المحل / المتجر:</label>
                                     <select id="shopStatus" required>
@@ -915,7 +916,6 @@
                         <label>رقم المحل:</label>
                         <input type="text" id="editShopNumber" required>
                     </div>
-                    <!-- حقل تعديل الحالة -->
                     <div class="form-group">
                         <label>حالة المحل / المتجر:</label>
                         <select id="editShopStatus" required>
@@ -1196,7 +1196,7 @@
 
         function parseArabicNumbers(str) {
             if (!str) return '';
-            return String(str).replace(/[٠-٩]/g, d => '٠١ي٢٣٤٥٦٧٨٩'.indexOf(d));
+            return String(str).replace(/[٠-٩]/g, d => '٠١٢٣٤٥٦٧٨٩'.indexOf(d));
         }
 
         function formatCurrency(amount) {
@@ -1851,7 +1851,6 @@
 
             let daysText = '';
             let daysClass = 'days-normal';
-            let statusHtml = '';
 
             if (next.isOverdueFlag) {
                 daysText = 'متأخر';
@@ -1868,7 +1867,6 @@
             }
 
             return {
-                statusHtml: statusHtml,
                 html: `
                     <div class="next-installment-box">
                         <span class="next-inst-amount">${formatCurrency(next.amount)}</span>
@@ -2254,7 +2252,6 @@
                             ? '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--success)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>' 
                             : '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--text-muted)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>';
 
-                        // توليد الأيقونة والشكل حسب الحالة الجديدة المطلوبة بدلاً من الـ *
                         let statusHtml = '';
                         const sState = item.shopStatus || 'غير مؤجر';
                         if (sState === 'غير مؤجر') {
@@ -2515,8 +2512,8 @@
                         : (item.daysLeft === 0 ? 'مستحقة اليوم' : `متبقي ${item.daysLeft} يوم`);
 
                     const cardSymbolSvg = isUrgent 
-                        ? `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--danger)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"></path><line x1="12" y1="9" x2="12" y2="13"></line><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>`
-                        : `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--primary)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="16" x2="12" y2="12"></line><line x1="12" y1="8" x2="12.01" y2="8"></line></svg>`;
+                        ? `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--danger)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"></path><line x1="12" y1="9" x2="12" y2="13"></line><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>`
+                        : `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--primary)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="16" x2="12" y2="12"></line><line x1="12" y1="8" x2="12.01" y2="8"></line></svg>`;
 
                     alertsGrid.innerHTML += `
                         <div class="alert-card ${isUrgent ? 'urgent' : ''}">
@@ -2526,7 +2523,7 @@
                                     <span class="alert-icon-symbol">${cardSymbolSvg}</span>
                                     <div class="alert-shop" title="${item.brandName}"><strong>${item.brandName}</strong></div>
                                 </div>
-                                <div class="alert-sub" style="padding-left: 15px;" title="محل ${item.shopNumber} (${item.centerName})">محل ${item.shopNumber} (${item.centerName})</div>
+                                <div class="alert-sub" title="محل ${item.shopNumber} (${item.centerName})">محل ${item.shopNumber} (${item.centerName})</div>
                             </div>
                             <div class="alert-days-box">
                                 <span class="alert-days-num">${item.daysLeft <= 0 ? '!' : item.daysLeft}</span>
