@@ -1,0 +1,11 @@
+{
+  "name": "منصة يُسر — إدارة الإيجارات",
+  "short_name": "يُسر",
+  "lang": "ar",
+  "dir": "rtl",
+  "start_url": "./#/dashboard",
+  "display": "standalone",
+  "background_color": "#0b1116",
+  "theme_color": "#0b1116",
+  "icons": [{ "src": "assets/logo.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any" }]
+}

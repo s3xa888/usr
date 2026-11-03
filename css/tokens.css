@@ -1,0 +1,78 @@
+/* ===================== متغيرات التصميم =====================
+   غيّر الألوان والمسافات من هنا فقط وستنعكس على كامل المنصة */
+:root {
+  --font: 'IBM Plex Sans Arabic', 'Segoe UI', Tahoma, system-ui, sans-serif;
+  --r-sm: 8px;
+  --r: 12px;
+  --r-lg: 16px;
+  --r-xl: 22px;
+  --sidebar-w: 264px;
+  --topbar-h: 64px;
+  --tabbar-h: 66px;
+  --ease: cubic-bezier(.2, .8, .2, 1);
+  --safe-b: env(safe-area-inset-bottom, 0px);
+  --safe-t: env(safe-area-inset-top, 0px);
+}
+
+:root,
+[data-theme='dark'] {
+  color-scheme: dark;
+  --bg: #0b1116;
+  --bg-glow: radial-gradient(1200px 600px at 100% -10%, rgba(46, 196, 176, .07), transparent 60%);
+  --surface: #121a21;
+  --surface-2: #162029;
+  --surface-3: #1c2832;
+  --border: #213039;
+  --border-strong: #2d3f4a;
+  --text: #e8eef2;
+  --text-2: #9db0bb;
+  --text-3: #6b7f8b;
+  --primary: #2ec4b0;
+  --primary-hover: #49d6c3;
+  --primary-ink: #03201c;
+  --primary-soft: rgba(46, 196, 176, .12);
+  --accent: #e3b766;
+  --accent-soft: rgba(227, 183, 102, .13);
+  --success: #3ad29f;
+  --success-soft: rgba(58, 210, 159, .13);
+  --warning: #f5b83d;
+  --warning-soft: rgba(245, 184, 61, .14);
+  --danger: #f47272;
+  --danger-soft: rgba(244, 114, 114, .14);
+  --info: #6aa8f7;
+  --info-soft: rgba(106, 168, 247, .14);
+  --shadow: 0 1px 0 rgba(255, 255, 255, .025) inset, 0 12px 32px -18px rgba(0, 0, 0, .7);
+  --shadow-lg: 0 40px 90px -30px rgba(0, 0, 0, .8);
+  --scrim: rgba(3, 8, 12, .62);
+}
+
+[data-theme='light'] {
+  color-scheme: light;
+  --bg: #f3f5f4;
+  --bg-glow: radial-gradient(1200px 600px at 100% -10%, rgba(15, 118, 110, .06), transparent 60%);
+  --surface: #ffffff;
+  --surface-2: #f7f9f8;
+  --surface-3: #eef2f1;
+  --border: #e1e8e5;
+  --border-strong: #cdd8d4;
+  --text: #0e1b18;
+  --text-2: #4d605a;
+  --text-3: #83938e;
+  --primary: #0f766e;
+  --primary-hover: #0b5f58;
+  --primary-ink: #ffffff;
+  --primary-soft: rgba(15, 118, 110, .09);
+  --accent: #a3701c;
+  --accent-soft: rgba(196, 140, 40, .12);
+  --success: #078a5f;
+  --success-soft: rgba(7, 138, 95, .1);
+  --warning: #b45309;
+  --warning-soft: rgba(217, 119, 6, .11);
+  --danger: #d02d2d;
+  --danger-soft: rgba(220, 38, 38, .09);
+  --info: #2563eb;
+  --info-soft: rgba(37, 99, 235, .09);
+  --shadow: 0 1px 2px rgba(15, 30, 25, .04), 0 8px 24px -14px rgba(15, 30, 25, .16);
+  --shadow-lg: 0 30px 70px -25px rgba(15, 30, 25, .35);
+  --scrim: rgba(14, 27, 24, .35);
+}

@@ -1,0 +1,167 @@
+/* ===================== شاشة التحميل ===================== */
+.boot {
+  position: fixed; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 16px;
+  color: var(--text-2);
+}
+.boot-logo { width: 64px; height: 64px; border-radius: 18px; }
+
+/* ===================== شاشة الدخول ===================== */
+.auth {
+  min-height: 100vh; min-height: 100dvh;
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  padding: 24px 16px calc(24px + var(--safe-b));
+  position: relative; overflow: hidden;
+}
+.auth-bg {
+  position: absolute; inset: 0; z-index: -1;
+  background:
+    radial-gradient(700px 420px at 85% 10%, var(--primary-soft), transparent 70%),
+    radial-gradient(600px 400px at 10% 90%, var(--accent-soft), transparent 70%);
+}
+.auth-card {
+  width: 100%; max-width: 420px;
+  background: var(--surface); border: 1px solid var(--border); border-radius: var(--r-xl);
+  padding: 32px 28px; box-shadow: var(--shadow-lg);
+  display: flex; flex-direction: column; gap: 22px;
+}
+.auth-brand { text-align: center; display: flex; flex-direction: column; align-items: center; gap: 6px; }
+.auth-brand h1 { font-size: 22px; margin-top: 8px; }
+.auth-brand p { color: var(--text-2); font-size: 13px; }
+.auth-foot { margin-top: 18px; color: var(--text-3); font-size: 12px; display: flex; align-items: center; gap: 6px; }
+.auth-notice {
+  display: flex; gap: 10px; align-items: flex-start; padding: 12px 14px; border-radius: var(--r);
+  background: var(--info-soft); color: var(--text); font-size: 13px; border: 1px solid transparent;
+}
+.auth-notice .ico { color: var(--info); flex-shrink: 0; margin-top: 2px; }
+.auth-notice-primary { background: var(--primary-soft); }
+.auth-notice-primary .ico { color: var(--primary); }
+.auth-notice-danger { background: var(--danger-soft); }
+.auth-notice-danger .ico { color: var(--danger); }
+.form-error { color: var(--danger); font-size: 13px; background: var(--danger-soft); padding: 8px 12px; border-radius: var(--r-sm); }
+
+.brand-logo { width: 38px; height: 38px; border-radius: 11px; object-fit: contain; flex-shrink: 0; }
+.brand-logo-lg { width: 68px; height: 68px; border-radius: 18px; box-shadow: 0 14px 30px -12px var(--primary-soft); }
+
+/* ===================== هيكل التطبيق ===================== */
+.app { min-height: 100vh; }
+
+.sidebar {
+  position: fixed; inset-block: 0; inset-inline-start: 0; width: var(--sidebar-w);
+  background: var(--surface); border-inline-end: 1px solid var(--border);
+  display: flex; flex-direction: column; z-index: 40;
+  padding: calc(18px + var(--safe-t)) 14px 14px;
+}
+.side-brand { display: flex; align-items: center; gap: 12px; padding: 4px 8px 20px; }
+.side-brand strong { display: block; font-size: 15px; }
+.side-brand small { display: block; color: var(--text-3); font-size: 11px; }
+
+.side-nav { display: flex; flex-direction: column; gap: 3px; flex: 1; overflow-y: auto; }
+.side-nav a {
+  display: flex; align-items: center; gap: 12px; padding: 10px 12px; border-radius: var(--r);
+  color: var(--text-2); font-weight: 500; transition: background .15s, color .15s;
+  position: relative;
+}
+.side-nav a:hover { background: var(--surface-2); color: var(--text); }
+.side-nav a.active { background: var(--primary-soft); color: var(--primary); font-weight: 600; }
+.side-nav a.active::before {
+  content: ''; position: absolute; inset-inline-start: -14px; top: 10px; bottom: 10px; width: 3px;
+  border-radius: 3px 0 0 3px; background: var(--primary);
+}
+.nav-count {
+  margin-inline-start: auto; font-style: normal; font-size: 11px; font-weight: 700;
+  min-width: 22px; height: 20px; padding: 0 6px; border-radius: 10px; display: grid; place-items: center;
+  background: var(--danger); color: #fff;
+}
+
+.side-user {
+  display: flex; align-items: center; gap: 10px; padding: 12px 10px; margin-top: 10px;
+  border-top: 1px solid var(--border);
+}
+.side-user > div { flex: 1; min-width: 0; }
+.side-user strong { display: block; font-size: 13px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.side-user small { color: var(--text-3); font-size: 11px; }
+
+.main { margin-inline-start: var(--sidebar-w); min-height: 100vh; display: flex; flex-direction: column; }
+
+.topbar {
+  position: sticky; top: 0; z-index: 30;
+  height: calc(var(--topbar-h) + var(--safe-t)); padding: var(--safe-t) 28px 0;
+  display: flex; align-items: center; gap: 12px;
+  background: color-mix(in srgb, var(--bg) 82%, transparent);
+  backdrop-filter: saturate(160%) blur(14px); -webkit-backdrop-filter: saturate(160%) blur(14px);
+  border-bottom: 1px solid var(--border);
+}
+.topbar-title { font-size: 16px; font-weight: 600; flex: 1; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.topbar-actions { display: flex; align-items: center; gap: 6px; }
+.topbar-logo { width: 32px; height: 32px; border-radius: 9px; }
+
+.conn { display: inline-flex; align-items: center; gap: 7px; font-size: 12px; color: var(--text-3); padding: 0 8px; }
+.conn i { width: 8px; height: 8px; border-radius: 50%; background: var(--success); box-shadow: 0 0 0 3px var(--success-soft); }
+.conn.off { color: var(--warning); }
+.conn.off i { background: var(--warning); box-shadow: 0 0 0 3px var(--warning-soft); animation: pulse 1.4s infinite; }
+@keyframes pulse { 50% { opacity: .35; } }
+
+.bell { position: relative; }
+.bell-count {
+  position: absolute; top: 2px; inset-inline-end: 0; font-style: normal;
+  min-width: 18px; height: 18px; padding: 0 5px; border-radius: 9px; font-size: 10px; font-weight: 700;
+  display: grid; place-items: center; background: var(--surface-3); color: var(--text); border: 2px solid var(--bg);
+}
+.bell-count.hot { background: var(--danger); color: #fff; }
+
+.content { flex: 1; padding: 28px; width: 100%; max-width: 1360px; margin: 0 auto; outline: none; }
+.page { display: flex; flex-direction: column; gap: 20px; animation: fadeUp .28s var(--ease); }
+@keyframes fadeUp { from { opacity: 0; transform: translateY(6px); } }
+
+/* ===================== لوحة التنبيهات ===================== */
+.panel {
+  position: fixed; inset-block: 0; inset-inline-end: 0; width: min(420px, 100vw);
+  background: var(--surface); border-inline-start: 1px solid var(--border); box-shadow: var(--shadow-lg);
+  display: flex; flex-direction: column; z-index: 60;
+  transform: translateX(-102%); transition: transform .28s var(--ease);
+  padding-top: var(--safe-t);
+}
+.panel-open .panel { transform: none; }
+.panel-head { display: flex; align-items: center; justify-content: space-between; padding: 16px 18px; border-bottom: 1px solid var(--border); }
+.panel-head h2 { font-size: 16px; display: flex; align-items: center; gap: 8px; }
+.panel-body { flex: 1; overflow-y: auto; padding: 12px; }
+.panel-foot { padding: 12px 18px calc(12px + var(--safe-b)); border-top: 1px solid var(--border); }
+
+.side-scrim {
+  position: fixed; inset: 0; background: var(--scrim); z-index: 35;
+  opacity: 0; pointer-events: none; transition: opacity .2s;
+}
+.panel-scrim { z-index: 55; }
+.panel-open .panel-scrim { opacity: 1; pointer-events: auto; }
+
+/* ===================== شريط التبويبات (جوال) ===================== */
+.tabbar { display: none; }
+.only-mobile { display: none !important; }
+
+@media (max-width: 1024px) {
+  .sidebar { transform: translateX(102%); transition: transform .28s var(--ease); box-shadow: var(--shadow-lg); z-index: 50; }
+  .side-open .sidebar { transform: none; }
+  .side-open .side-scrim:not(.panel-scrim) { opacity: 1; pointer-events: auto; z-index: 45; }
+  .main { margin-inline-start: 0; }
+  .only-mobile { display: inline-flex !important; }
+  .topbar { padding-inline: 14px; }
+  .content { padding: 20px 16px; }
+}
+
+@media (max-width: 720px) {
+  .conn span { display: none; }
+  .content { padding: 16px 12px calc(var(--tabbar-h) + 24px + var(--safe-b)); }
+  .tabbar {
+    display: flex; position: fixed; inset-inline: 0; bottom: 0; z-index: 30;
+    height: calc(var(--tabbar-h) + var(--safe-b)); padding-bottom: var(--safe-b);
+    background: color-mix(in srgb, var(--surface) 92%, transparent);
+    backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px);
+    border-top: 1px solid var(--border);
+  }
+  .tabbar a, .tabbar button {
+    flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 3px;
+    color: var(--text-3); font-size: 10.5px; font-weight: 500; background: none; border: 0; cursor: pointer;
+  }
+  .tabbar a.active { color: var(--primary); }
+  .topbar-title { font-size: 15px; }
+}
