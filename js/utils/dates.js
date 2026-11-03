@@ -96,3 +96,42 @@ export const formatTimestamp = (ms) => {
   const dt = new Date(ms);
   return `${toISO(dt).replace(/-/g, '/')} ${pad(dt.getHours())}:${pad(dt.getMinutes())}`;
 };
+
+/**
+ * المدة الفعلية بالسنوات (كسرية) من تاريخ البداية حتى تاريخ النهاية شاملاً اليوم الأخير.
+ * تُحسب بالأشهر الكاملة ثم كسر الشهر المتبقي بالأيام، فلا تتأثر بالسنوات الكبيسة:
+ * 2024-01-01 ← 2024-12-31 = سنة واحدة بالضبط، و 2025-01-01 ← 2025-06-30 = 0.5 سنة.
+ */
+export function yearsBetween(startISO, endISO) {
+  if (!isValidISODate(startISO) || !isValidISODate(endISO)) return 0;
+  const endEx = addDays(endISO, 1); // اليوم التالي للنهاية (نهاية حصرية)
+  if (diffDays(startISO, endEx) <= 0) return 0;
+  const s = parseISODate(startISO);
+  const e = parseISODate(endEx);
+  let months = (e.y - s.y) * 12 + (e.m - s.m) + 1;
+  while (months > 0 && addMonths(startISO, months) > endEx) months--;
+  const anchor = addMonths(startISO, months);
+  const next = addMonths(startISO, months + 1);
+  const rem = diffDays(anchor, endEx);
+  const frac = rem > 0 ? rem / diffDays(anchor, next) : 0;
+  return (months + frac) / 12;
+}
+
+/** وصف المدة بين تاريخين: "سنتان و6 أشهر و10 أيام" */
+export function periodText(startISO, endISO) {
+  if (!isValidISODate(startISO) || !isValidISODate(endISO)) return '—';
+  const endEx = addDays(endISO, 1);
+  if (diffDays(startISO, endEx) <= 0) return '—';
+  const s = parseISODate(startISO);
+  const e = parseISODate(endEx);
+  let months = (e.y - s.y) * 12 + (e.m - s.m) + 1;
+  while (months > 0 && addMonths(startISO, months) > endEx) months--;
+  const days = diffDays(addMonths(startISO, months), endEx);
+  const y = Math.floor(months / 12);
+  const m = months % 12;
+  const parts = [];
+  if (y) parts.push(y === 1 ? 'سنة' : y === 2 ? 'سنتان' : y <= 10 ? `${y} سنوات` : `${y} سنة`);
+  if (m) parts.push(m === 1 ? 'شهر' : m === 2 ? 'شهران' : m <= 10 ? `${m} أشهر` : `${m} شهراً`);
+  if (days) parts.push(days === 1 ? 'يوم' : days === 2 ? 'يومان' : days <= 10 ? `${days} أيام` : `${days} يوماً`);
+  return parts.join(' و') || '—';
+}

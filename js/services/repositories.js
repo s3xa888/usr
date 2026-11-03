@@ -33,6 +33,17 @@ export const centersRepo = {
     await update(dbRef('centers', id), { name: clean });
     audit('center.rename', { id, name: clean });
   },
+  /** موقع المركز على الخريطة: إحداثيان فقط { lat, lng } — أو null للحذف */
+  async setLocation(id, loc) {
+    const value = loc ? { lat: Math.round(loc.lat * 1e6) / 1e6, lng: Math.round(loc.lng * 1e6) / 1e6 } : null;
+    await set(dbRef('centers', id, 'location'), value);
+    audit('center.location', { id });
+  },
+  /** بيانات الاستثمار: { ownership: 'owned'|'leased', landRent, buildCost, years } */
+  async saveInvestment(id, data) {
+    await set(dbRef('centers', id, 'investment'), { ...data, updatedAt: Date.now() });
+    audit('center.investment', { id });
+  },
   async remove(id) {
     if (store.get('contracts').some((c) => c.centerId === id)) throw { code: 'has-contracts' };
     await remove(dbRef('centers', id));
@@ -130,6 +141,10 @@ export const settingsRepo = {
   saveBranding: (data) => update(dbRef('branding'), { ...data, updatedAt: Date.now() }),
   saveGeneral: (data) => update(dbRef('settings', 'general'), { ...data, updatedAt: Date.now() }),
   saveNotifications: (data) => set(dbRef('settings', 'notifications'), { ...data, updatedAt: Date.now() }),
+  /** حفظ المظهر في حساب المستخدم: حقل نصي واحد صغير يُكتب فقط عند التغيير */
+  saveTheme: (uid, mode) => set(dbRef('prefs', uid, 'theme'), mode),
+  /** تصحيح الإيجار السنوي المخزّن للعقود (يكتب حقل annualRent فقط) */
+  fixAnnualRents: (items) => update(ref(db), Object.fromEntries(items.map((x) => [path('contracts', x.id, 'annualRent'), x.annualRent]))),
   dismissAlert: (uid, key) => set(dbRef('prefs', uid, 'dismissed', key), Date.now()),
   clearDismissed: (uid) => remove(dbRef('prefs', uid, 'dismissed')),
   savePushToken: (uid, token) => set(dbRef('pushTokens', uid, token.replace(/[.#$/[\]]/g, '_')), { token, at: Date.now(), ua: navigator.userAgent.slice(0, 120) }),

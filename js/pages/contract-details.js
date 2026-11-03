@@ -4,7 +4,7 @@
 import { APP_CONFIG, labelOf } from '../config/app.config.js';
 import { store, can, centerName } from '../core/store.js';
 import { html, setHTML, on } from '../utils/dom.js';
-import { countdown, formatDate, formatTimestamp } from '../utils/dates.js';
+import { countdown, formatDate, formatTimestamp, periodText } from '../utils/dates.js';
 import { money, pct } from '../utils/numbers.js';
 import { scheduleSummary, isOutstanding } from '../domain/installments.js';
 import { contractTotal } from '../domain/contracts.js';
@@ -65,12 +65,13 @@ export function openContractDetails(contractId) {
             <div><span>الجوال</span><strong class="num" dir="ltr">${c.tenantPhone}</strong></div>
             <div><span>المساحة</span><strong class="num">${c.area ? `${c.area} م²` : '—'}</strong></div>
             <div><span>الإيجار السنوي</span><strong class="num">${money(c.annualRent)}</strong></div>
-            <div><span>مدة العقد</span><strong class="num">${formatDate(c.startDate)} ← ${formatDate(c.endDate)}</strong></div>
+            <div><span>مدة العقد</span><strong class="num">${formatDate(c.startDate)} ← ${formatDate(c.endDate)}</strong><small class="muted">${periodText(c.startDate, c.endDate)}</small></div>
             <div><span>طريقة الدفع</span><strong>${labelOf(APP_CONFIG.paymentTypes, c.paymentType)}</strong></div>
             <div><span>أضيف بواسطة</span><strong>${c.createdBy}</strong><small class="muted num">${formatTimestamp(c.createdAt)}</small></div>
             <div><span>آخر تعديل</span><strong>${c.updatedBy}</strong><small class="muted num">${formatTimestamp(c.updatedAt)}</small></div>
           </div>
-          ${c.notes ? html`<div class="note-box">${icon('info', 16)}<p>${c.notes}</p></div>` : ''}
+          ${c.notes ? html`<div class="note-box">${icon('info', 16)}<div><strong class="note-title">الملاحظات</strong><p>${c.notes}</p></div></div>` : ''}
+          ${c.violations ? html`<div class="note-box note-danger">${icon('alert', 16)}<div><strong class="note-title">المخالفات</strong><p>${c.violations}</p></div></div>` : ''}
 
           <div class="pay-summary">
             <div class="pay-bar"><i style="width:${pct(s.paidTotal, s.total)}%"></i></div>

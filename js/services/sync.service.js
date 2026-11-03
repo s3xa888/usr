@@ -31,7 +31,7 @@ export function startSync({ uid, isAdmin }) {
   listen(dbRef('centers'), (snap) => {
     const val = snap.val() || {};
     const list = Object.entries(val)
-      .map(([id, c]) => ({ id, name: c.name || '', createdAt: c.createdAt || 0, order: c.order ?? c.createdAt ?? 0 }))
+      .map(([id, c]) => ({ id, name: c.name || '', createdAt: c.createdAt || 0, order: c.order ?? c.createdAt ?? 0, location: c.location || null, investment: c.investment || null }))
       .sort((a, b) => a.order - b.order);
     store.set('loaded', { ...store.get('loaded'), centers: true });
     store.set('centers', list);

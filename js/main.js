@@ -10,6 +10,7 @@ import { listenBranding, listenProfile, startSync, stopSync } from './services/s
 import { notificationCenter } from './notifications/notification-center.js';
 import { mountShell, unmountShell, onPageChange } from './components/shell.js';
 import { closeAllModals } from './components/overlay.js';
+import { startThemeSync, stopThemeSync } from './services/theme-pref.js';
 import { renderLogin, renderSetup, renderBlocked, renderFatal } from './pages/auth.js';
 import { openContractDetails } from './pages/contract-details.js';
 
@@ -18,10 +19,11 @@ import contracts from './pages/contracts.js';
 import entitlements from './pages/entitlements.js';
 import centers from './pages/centers.js';
 import reports from './pages/reports.js';
+import investment from './pages/investment.js';
 import users from './pages/users.js';
 import settings from './pages/settings.js';
 
-[dashboard, contracts, entitlements, centers, reports, users, settings].forEach(registerPage);
+[dashboard, contracts, entitlements, centers, reports, investment, users, settings].forEach(registerPage);
 
 const authEl = document.getElementById('auth');
 const appEl = document.getElementById('app');
@@ -48,6 +50,7 @@ function applyBranding(b = {}) {
 function startApp(profile) {
   show('app');
   mountShell(appEl);
+  startThemeSync();
   startSync({ uid: store.get('authUser').uid, isAdmin: ['owner', 'admin'].includes(profile.role) });
   startRouter(appEl.querySelector('#page'), onPageChange);
   notificationCenter.start({ openContract: openContractDetails });
@@ -58,6 +61,7 @@ function stopApp() {
   if (!started) return;
   closeAllModals();
   notificationCenter.stop();
+  stopThemeSync();
   stopRouter();
   stopSync();
   unmountShell();

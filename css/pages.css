@@ -96,3 +96,51 @@
 .legacy-summary div { background: var(--surface-2); border: 1px solid var(--border); border-radius: var(--r); padding: 12px; text-align: center; display: flex; flex-direction: column; }
 .legacy-summary strong { font-size: 22px; }
 .legacy-summary span { color: var(--text-3); font-size: 12px; }
+
+/* ===== ملاحظات ومخالفات العقد ===== */
+.note-box > div { min-width: 0; }
+.note-title { display: block; font-size: 12px; margin-bottom: 2px; }
+.note-danger { background: var(--danger-soft); }
+.note-danger .ico, .note-danger .note-title { color: var(--danger); }
+.text-primary { color: var(--primary) !important; }
+
+/* ===== ملخص الإيجار السنوي المحسوب (الدفع اليدوي) ===== */
+.calc-box { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 1px; background: var(--border); border: 1px solid var(--border); border-radius: var(--r); overflow: hidden; }
+.calc-box > div { background: var(--surface-2); padding: 9px 12px; display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.calc-box span { font-size: 11.5px; color: var(--text-3); }
+.calc-box strong { font-size: 14px; }
+.calc-box .calc-main { background: var(--primary-soft); }
+.calc-box .calc-main strong { color: var(--primary); font-size: 15.5px; }
+.calc-warn { display: flex; align-items: center; gap: 8px; padding: 10px 12px; background: var(--warning-soft); color: var(--warning); font-size: 13px; }
+@media (max-width: 560px) { .calc-box { grid-template-columns: 1fr; } }
+
+/* ===== الخريطة ===== */
+.map-search { display: flex; gap: 8px; margin-bottom: 10px; }
+.map-search .input { flex: 1; min-width: 0; }
+.map-results { list-style: none; margin: -4px 0 10px; padding: 4px; border: 1px solid var(--border); border-radius: var(--r); background: var(--surface-2); max-height: 180px; overflow-y: auto; }
+.map-results button { width: 100%; display: flex; gap: 8px; align-items: flex-start; text-align: start; background: none; border: 0; padding: 8px 10px; border-radius: 8px; color: var(--text); cursor: pointer; font: inherit; font-size: 13px; }
+.map-results button:hover { background: var(--surface-3); }
+.map-results li.muted { padding: 8px 10px; }
+.map-box { height: min(460px, 58vh); border-radius: var(--r); overflow: hidden; border: 1px solid var(--border); background: var(--surface-2); display: grid; }
+.map-box > .loading-block, .map-box > .empty { place-self: center; }
+.map-box .leaflet-container { direction: ltr; height: 100%; width: 100%; font-family: inherit; }
+.map-meta { display: flex; justify-content: space-between; align-items: center; gap: 8px; margin-top: 10px; flex-wrap: wrap; }
+.map-pin { color: var(--danger); background: none; border: 0; filter: drop-shadow(0 2px 3px rgba(0, 0, 0, .35)); }
+[data-theme='dark'] .map-box .leaflet-tile-pane { filter: brightness(.85) contrast(1.05) saturate(.85); }
+@media (max-width: 560px) { .hide-sm { display: none; } }
+
+/* ===== العائد على الاستثمار ===== */
+.roi-card .card-head h2 .badge { margin-inline-start: 4px; }
+.roi-hero { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; margin-bottom: 14px; }
+.roi-hero > div { padding: 16px 18px; border-radius: var(--r); background: var(--surface-2); border: 1px solid var(--border); display: flex; flex-direction: column; gap: 4px; }
+.roi-hero span { font-size: 12.5px; color: var(--text-3); }
+.roi-rate { background: linear-gradient(135deg, var(--primary-soft), var(--accent-soft)) !important; }
+.roi-rate strong { font-size: 30px; font-weight: 700; line-height: 1.2; }
+.roi-net strong { font-size: 22px; font-weight: 700; line-height: 1.3; }
+.roi-grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 1px; margin: 0; background: var(--border); border: 1px solid var(--border); border-radius: var(--r); overflow: hidden; }
+.roi-grid > div { background: var(--surface); padding: 11px 13px; display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.roi-grid dt { font-size: 11.5px; color: var(--text-3); }
+.roi-grid dd { margin: 0; font-size: 14.5px; font-weight: 600; overflow-wrap: anywhere; }
+.roi-grid small { font-size: 11px; }
+@media (max-width: 900px) { .roi-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+@media (max-width: 560px) { .roi-hero { grid-template-columns: 1fr; } .roi-rate strong { font-size: 26px; } }

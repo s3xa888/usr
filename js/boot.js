@@ -2,10 +2,10 @@
    ويعرض رسالة واضحة إذا تعذر تحميل المكتبات (انقطاع إنترنت مثلاً). */
 (function () {
   try {
-    var t = localStorage.getItem('yusr_theme') || 'dark';
+    var t = localStorage.getItem('yusr_theme') || 'light';
     if (t === 'system') t = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
     document.documentElement.dataset.theme = t;
-  } catch (e) { document.documentElement.dataset.theme = 'dark'; }
+  } catch (e) { document.documentElement.dataset.theme = 'light'; }
 
   setTimeout(function () {
     if (window.__yusrReady) return;

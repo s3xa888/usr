@@ -29,11 +29,11 @@ export function downloadCSV(filename, headers, rows) {
 }
 
 export function exportContractsCSV(contracts, name = 'العقود') {
-  const headers = ['المركز', 'الحالة', 'المحل', 'البراند', 'التصنيف', 'براند؟', 'المستأجر', 'الجوال', 'المساحة م²', 'الإيجار السنوي', 'طريقة الدفع', 'المدة (سنوات)', 'البداية', 'النهاية', 'أضيف بواسطة', 'آخر تعديل بواسطة'];
+  const headers = ['المركز', 'الحالة', 'المحل', 'البراند', 'التصنيف', 'براند؟', 'المستأجر', 'الجوال', 'المساحة م²', 'الإيجار السنوي', 'طريقة الدفع', 'المدة (سنوات)', 'البداية', 'النهاية', 'الملاحظات', 'المخالفات', 'أضيف بواسطة', 'آخر تعديل بواسطة'];
   const rows = contracts.map((c) => [
     centerName(c.centerId), labelOf(APP_CONFIG.shopStatuses, c.shopStatus), c.shopNumber, c.brandName, c.category,
     c.isBrand ? 'نعم' : 'لا', c.tenantName, c.tenantPhone, c.area, c.annualRent, labelOf(APP_CONFIG.paymentTypes, c.paymentType),
-    c.durationYears, c.startDate, c.endDate, c.createdBy, c.updatedBy,
+    c.durationYears, c.startDate, c.endDate, c.notes, c.violations, c.createdBy, c.updatedBy,
   ]);
   downloadCSV(`يسر_${name}_${todayISO()}.csv`, headers, rows);
 }

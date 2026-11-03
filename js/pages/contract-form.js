@@ -4,9 +4,9 @@
 import { APP_CONFIG } from '../config/app.config.js';
 import { store, actorName } from '../core/store.js';
 import { html, setHTML, formValues, on } from '../utils/dom.js';
-import { contractEndDate, formatDate, todayISO, addMonths } from '../utils/dates.js';
+import { contractEndDate, formatDate, todayISO, addMonths, addDays, diffDays, isValidISODate, yearsBetween, periodText } from '../utils/dates.js';
 import { money, toNumber, round2 } from '../utils/numbers.js';
-import { buildContract } from '../domain/contracts.js';
+import { buildContract, computeAnnualRent } from '../domain/contracts.js';
 import { generateSchedule } from '../domain/installments.js';
 import { contractsRepo } from '../services/repositories.js';
 import { friendlyError } from '../services/errors.js';
@@ -20,9 +20,9 @@ export function openContractForm(existing = null, { presetCenterId = '' } = {}) 
   const c = existing || {
     centerId: presetCenterId || store.get('centers')[0]?.id || '', shopNumber: '', shopStatus: 'leased_open', brandName: '',
     category: APP_CONFIG.categories[0], isBrand: false, tenantName: '', tenantPhone: '', area: '', annualRent: '',
-    startDate: todayISO(), durationYears: 1, paymentType: 'annual', notes: '', installments: [],
+    startDate: todayISO(), durationYears: 1, endDate: contractEndDate(todayISO(), 1), paymentType: 'annual', notes: '', violations: '', installments: [],
   };
-  let manualRows = existing?.paymentType === 'manual'
+  let manualRows = existing?.installments?.length
     ? existing.installments.map((i) => ({ dueDate: i.dueDate, amount: String(i.amount) }))
     : [{ dueDate: c.startDate || '', amount: '' }, { dueDate: '', amount: '' }];
 
@@ -62,9 +62,10 @@ export function openContractForm(existing = null, { presetCenterId = '' } = {}) 
       <fieldset class="form-section">
         <legend>${icon('calendar', 16)} العقد والدفعات</legend>
         <div class="grid-3">
-          <label class="field"><span>الإيجار السنوي (${APP_CONFIG.currency})</span><input class="input num" name="annualRent" value="${c.annualRent || ''}" inputmode="decimal" placeholder="175000" required></label>
-          <label class="field"><span>تاريخ البداية</span><input class="input" type="date" name="startDate" value="${c.startDate}" required></label>
-          <label class="field"><span>مدة العقد</span><select class="input" name="durationYears">${options(durations, c.durationYears)}</select></label>
+          <label class="field" data-fixed><span>الإيجار السنوي (${APP_CONFIG.currency})</span><input class="input num" name="annualRent" value="${c.annualRent || ''}" inputmode="decimal" placeholder="175000" required></label>
+          <label class="field"><span>تاريخ بداية العقد</span><input class="input" type="date" name="startDate" value="${c.startDate}" required></label>
+          <label class="field" data-fixed><span>مدة العقد</span><select class="input" name="durationYears">${options(durations, Math.min(APP_CONFIG.maxDurationYears, Math.max(1, Math.round(c.durationYears))))}</select></label>
+          <label class="field" data-manual-only hidden><span>تاريخ نهاية العقد</span><input class="input" type="date" name="endDate" value="${c.endDate || ''}"></label>
         </div>
         <div class="field"><span>طريقة الدفع</span>
           <div class="segmented wrap" role="radiogroup">
@@ -75,7 +76,13 @@ export function openContractForm(existing = null, { presetCenterId = '' } = {}) 
         <div class="manual-box" data-manual hidden></div>
       </fieldset>
 
-      <label class="field"><span>ملاحظات (اختياري)</span><textarea class="input" name="notes" rows="2" placeholder="أي تفاصيل إضافية عن العقد">${c.notes}</textarea></label>
+      <fieldset class="form-section">
+        <legend>${icon('file', 16)} الملاحظات والمخالفات</legend>
+        <div class="grid-2">
+          <label class="field"><span>الملاحظات</span><textarea class="input" name="notes" rows="3" maxlength="2000" placeholder="أي تفاصيل إضافية عن العقد">${c.notes || ''}</textarea></label>
+          <label class="field"><span>المخالفات</span><textarea class="input" name="violations" rows="3" maxlength="2000" placeholder="سجّل أي مخالفات على المستأجر أو المحل">${c.violations || ''}</textarea></label>
+        </div>
+      </fieldset>
     </form>`;
 
   openModal({
@@ -90,14 +97,31 @@ export function openContractForm(existing = null, { presetCenterId = '' } = {}) 
       const preview = el.querySelector('[data-preview]');
       const manualBox = el.querySelector('[data-manual]');
 
-      const renderManual = () => {
+      /** ملخص الدفعات اليدوية: المجموع والإيجار السنوي المحسوب من مدة العقد */
+      const manualCalc = () => {
         const v = formValues(form);
-        const expected = round2((toNumber(v.annualRent) || 0) * (Number(v.durationYears) || 1));
-        const total = round2(manualRows.reduce((s, r) => s + (toNumber(r.amount) || 0), 0));
-        const diff = round2(expected - total);
+        const rows = manualRows.map((r) => ({ amount: toNumber(r.amount) || 0 }));
+        const total = round2(rows.reduce((s, r) => s + r.amount, 0));
+        const years = yearsBetween(v.startDate, v.endDate);
+        const annual = computeAnnualRent(rows, v.startDate, v.endDate);
+        return { total, years, annual, period: periodText(v.startDate, v.endDate) };
+      };
+      const manualSummary = () => {
+        const m = manualCalc();
+        if (!(m.years > 0)) return html`<div class="calc-box calc-warn">${icon('alert', 16)} حدد تاريخ بداية ونهاية صحيحين ليتم حساب الإيجار السنوي</div>`;
+        return html`
+          <div class="calc-box">
+            <div><span>مجموع الدفعات</span><strong class="num">${money(m.total)}</strong></div>
+            <div><span>مدة العقد</span><strong>${m.period}</strong></div>
+            <div class="calc-main"><span>الإيجار السنوي المحسوب</span><strong class="num">${m.annual ? money(m.annual) : '—'}</strong></div>
+          </div>`;
+      };
+      const updateManualSummary = () => { const box = manualBox.querySelector('[data-msum]'); if (box) setHTML(box, manualSummary()); };
+
+      const renderManual = () => {
         setHTML(manualBox, html`
-          <div class="manual-head"><strong>الدفعات اليدوية</strong>
-            <span class="chip ${diff === 0 ? 'chip-success' : 'chip-warning'} num">المجموع ${money(total)} ${expected ? html`/ ${money(expected)}` : ''}</span></div>
+          <div class="manual-head"><strong>الدفعات اليدوية</strong><span class="muted small">تواريخ الدفعات = مواعيد الاستحقاق فقط، والإيجار السنوي يُحسب من مجموعها ومدة العقد</span></div>
+          <div data-msum>${manualSummary()}</div>
           <div class="manual-rows" data-error-slot="manual">
             ${manualRows.map((r, i) => html`
               <div class="manual-row">
@@ -109,7 +133,7 @@ export function openContractForm(existing = null, { presetCenterId = '' } = {}) 
           </div>
           <div class="manual-actions">
             <button type="button" class="btn btn-subtle btn-sm" data-add-row>${icon('plus', 16)} إضافة دفعة</button>
-            ${expected && manualRows.length ? html`<button type="button" class="btn btn-ghost btn-sm" data-split>توزيع المبلغ والتواريخ بالتساوي</button>` : ''}
+            ${manualRows.length > 1 ? html`<button type="button" class="btn btn-ghost btn-sm" data-split>توزيع التواريخ بالتساوي على مدة العقد</button>` : ''}
           </div>`);
       };
 
@@ -117,10 +141,13 @@ export function openContractForm(existing = null, { presetCenterId = '' } = {}) 
         const v = formValues(form);
         const isManual = v.paymentType === 'manual';
         manualBox.hidden = !isManual;
+        form.querySelectorAll('[data-fixed]').forEach((f) => { f.hidden = isManual; });
+        form.querySelectorAll('[data-manual-only]').forEach((f) => { f.hidden = !isManual; });
         const end = contractEndDate(v.startDate, Number(v.durationYears) || 1);
         if (isManual) {
+          if (!form.endDate.value && isValidISODate(v.startDate)) form.endDate.value = end;
           renderManual();
-          setHTML(preview, html`<div class="preview-line">${icon('calendar', 16)} ينتهي العقد في <strong class="num">${formatDate(end, { long: true })}</strong></div>`);
+          setHTML(preview, html`<div class="preview-line">${icon('calendar', 16)} ينتهي العقد في <strong class="num">${formatDate(form.endDate.value, { long: true })}</strong></div>`);
           return;
         }
         const rent = toNumber(v.annualRent);
@@ -133,11 +160,7 @@ export function openContractForm(existing = null, { presetCenterId = '' } = {}) 
       form.addEventListener('input', (e) => {
         if (e.target.dataset.mi !== undefined) {
           manualRows[+e.target.dataset.mi][e.target.dataset.mk] = e.target.value;
-          const v = formValues(form);
-          const expected = round2((toNumber(v.annualRent) || 0) * (Number(v.durationYears) || 1));
-          const total = round2(manualRows.reduce((s, r) => s + (toNumber(r.amount) || 0), 0));
-          const chip = manualBox.querySelector('.manual-head .chip');
-          if (chip) { chip.className = `chip ${round2(expected - total) === 0 ? 'chip-success' : 'chip-warning'} num`; chip.textContent = `المجموع ${money(total)}${expected ? ` / ${money(expected)}` : ''}`; }
+          updateManualSummary();
           return;
         }
         refresh();
@@ -150,15 +173,14 @@ export function openContractForm(existing = null, { presetCenterId = '' } = {}) 
       });
       on(manualBox, 'click', '[data-remove]', (e, btn) => { manualRows.splice(+btn.dataset.remove, 1); renderManual(); });
       on(manualBox, 'click', '[data-split]', () => {
+        // يوزّع تواريخ الاستحقاق بالتساوي من بداية العقد (المبالغ تبقى كما أدخلتها)
         const v = formValues(form);
-        const expected = round2((toNumber(v.annualRent) || 0) * (Number(v.durationYears) || 1));
+        if (!isValidISODate(v.startDate) || !isValidISODate(v.endDate)) { toast('حدد تاريخ البداية والنهاية أولاً', 'warning'); return; }
         const n = manualRows.length;
-        const base = Math.floor((expected * 100) / n);
-        const months = Math.max(1, Math.floor(((Number(v.durationYears) || 1) * 12) / n));
-        manualRows.forEach((r, i) => {
-          r.amount = String((base + (i === n - 1 ? Math.round(expected * 100) - base * n : 0)) / 100);
-          if (!r.dueDate && v.startDate) r.dueDate = addMonths(v.startDate, months * i);
-        });
+        const totalMonths = Math.round(yearsBetween(v.startDate, v.endDate) * 12);
+        const step = totalMonths >= n ? totalMonths / n : 0;
+        const daysStep = step ? 0 : Math.floor((diffDays(v.startDate, v.endDate) + 1) / n);
+        manualRows.forEach((r, i) => { r.dueDate = step ? addMonths(v.startDate, Math.round(step * i)) : addDays(v.startDate, daysStep * i); });
         renderManual();
       });
 

@@ -4,6 +4,7 @@ import { store, can } from '../core/store.js';
 import { callFunction } from '../core/firebase.js';
 import { html, setHTML, on, $, formValues } from '../utils/dom.js';
 import { formatTimestamp } from '../utils/dates.js';
+import { money } from '../utils/numbers.js';
 import { settingsRepo } from '../services/repositories.js';
 import { changeOwnPassword, logout } from '../services/auth.service.js';
 import { readLegacy, importLegacy, deleteLegacy } from '../services/migration.service.js';
@@ -17,7 +18,8 @@ import { pageHeader, emptyState, badge } from '../components/ui.js';
 import { toast, withBusy, confirmDialog } from '../components/overlay.js';
 import { icon } from '../components/icons.js';
 import { navigate } from '../core/router.js';
-import { applyTheme, currentTheme } from '../core/theme.js';
+import { currentTheme } from '../core/theme.js';
+import { chooseTheme } from '../services/theme-pref.js';
 import { passwordField, bindPasswordTools } from './users.js';
 
 const TABS = [
@@ -213,14 +215,14 @@ function accountTab(el) {
     <section class="card">
       <header class="card-head"><h2>${icon('palette', 18)} المظهر</h2></header>
       <div class="segmented">
-        ${[['dark', 'داكن'], ['light', 'فاتح'], ['system', 'حسب الجهاز']].map(([id, l]) => html`<label class="seg"><input type="radio" name="theme" value="${id}" ${currentTheme() === id ? 'checked' : ''}><span>${l}</span></label>`)}
+        ${[['light', 'فاتح'], ['dark', 'داكن'], ['system', 'حسب الجهاز']].map(([id, l]) => html`<label class="seg"><input type="radio" name="theme" value="${id}" ${currentTheme() === id ? 'checked' : ''}><span>${l}</span></label>`)}
       </div>
     </section>
     <section class="card"><button class="btn btn-ghost text-danger" data-logout>${icon('logout', 18)} تسجيل الخروج</button>
       <p class="muted small top-gap">الإصدار ${APP_CONFIG.version}</p></section>`);
 
   bindPasswordTools(el);
-  on(el, 'change', 'input[name=theme]', (e, i) => applyTheme(i.value));
+  on(el, 'change', 'input[name=theme]', (e, i) => chooseTheme(i.value));
   on(el, 'click', '[data-logout]', () => logout());
   $('[data-pass]', el).addEventListener('submit', (e) => {
     e.preventDefault();
@@ -244,7 +246,35 @@ function dataTab(el) {
       <header class="card-head"><h2>${icon('download', 18)} نسخة احتياطية</h2></header>
       <p class="muted">تصدير كل العقود إلى ملف Excel. للنسخ الاحتياطي الكامل: Firebase Console ← Realtime Database ← ⋮ ← Export JSON.</p>
       <div><button class="btn btn-subtle" data-export>${icon('download', 18)} تصدير كل العقود</button></div>
+    </section>
+    <section class="card stack">
+      <header class="card-head"><h2>${icon('wallet', 18)} إعادة حساب الإيجار السنوي للعقود</h2></header>
+      <p class="muted">الإيجار السنوي يُحسب الآن من <strong>مجموع دفعات العقد ÷ مدة العقد الفعلية</strong> (من تاريخ البداية حتى تاريخ النهاية). المنصة تعرض القيمة الصحيحة تلقائياً، وهذه الأداة تحفظ القيمة المصححة في قاعدة البيانات أيضاً. لا يتغير أي شيء آخر في العقود (الدفعات، حالات السداد، التواريخ).</p>
+      <div data-rent-fix></div>
     </section>`);
+
+  const fixBox = $('[data-rent-fix]', el);
+  const renderFix = () => {
+    const diffs = store.get('contracts').filter((c) => c.installments.length && Math.abs(c.annualRent - c.storedAnnualRent) >= 0.01);
+    if (!diffs.length) { setHTML(fixBox, html`<p class="hint">${icon('check', 14)} كل العقود محفوظة بالإيجار السنوي الصحيح.</p>`); return; }
+    setHTML(fixBox, html`
+      <div class="table-wrap"><table class="table table-compact">
+        <thead><tr><th>النشاط</th><th>المحل</th><th>المحفوظ</th><th>الصحيح</th></tr></thead>
+        <tbody>${diffs.slice(0, 50).map((c) => html`<tr><td>${c.brandName}</td><td class="num">${c.shopNumber}</td><td class="num muted">${money(c.storedAnnualRent)}</td><td class="num"><strong>${money(c.annualRent)}</strong></td></tr>`)}</tbody>
+      </table></div>
+      ${diffs.length > 50 ? html`<p class="hint">و ${diffs.length - 50} عقد آخر…</p>` : ''}
+      <div><button class="btn btn-primary" data-fix-rent>${icon('check', 18)} حفظ القيم الصحيحة (${diffs.length} عقد)</button></div>`);
+  };
+  renderFix();
+  on(fixBox, 'click', '[data-fix-rent]', (ev, btn) => withBusy(btn, async () => {
+    const diffs = store.get('contracts').filter((c) => c.installments.length && Math.abs(c.annualRent - c.storedAnnualRent) >= 0.01);
+    if (!(await confirmDialog({ title: 'إعادة حساب الإيجار السنوي', message: `سيتم تحديث حقل الإيجار السنوي فقط في ${diffs.length} عقد. تأكد أنك أخذت نسخة احتياطية. متابعة؟`, confirmText: 'متابعة' }))) return;
+    try {
+      for (let i = 0; i < diffs.length; i += 200) await settingsRepo.fixAnnualRents(diffs.slice(i, i + 200).map((c) => ({ id: c.id, annualRent: c.annualRent })));
+      toast(`تم تحديث ${diffs.length} عقد`);
+      setTimeout(renderFix, 400);
+    } catch (err) { toast(friendlyError(err), 'danger'); }
+  }));
 
   const box = $('[data-legacy]', el);
   on(el, 'click', '[data-export]', () => exportContractsCSV(store.get('contracts'), 'نسخة_احتياطية'));
@@ -281,7 +311,7 @@ function dataTab(el) {
 /* ---------------- سجل العمليات ---------------- */
 const ACTIONS = {
   'contract.add': 'إضافة عقد', 'contract.edit': 'تعديل عقد', 'contract.delete': 'حذف عقد', 'installment.update': 'تحديث دفعة',
-  'center.add': 'إضافة مركز', 'center.rename': 'تعديل مركز', 'center.delete': 'حذف مركز',
+  'center.add': 'إضافة مركز', 'center.rename': 'تعديل مركز', 'center.delete': 'حذف مركز', 'center.location': 'تحديد موقع مركز', 'center.investment': 'بيانات استثمار مركز',
   'user.add': 'إضافة مستخدم', 'user.edit': 'تعديل مستخدم', 'user.delete': 'حذف مستخدم', 'user.password': 'تغيير كلمة مرور',
 };
 

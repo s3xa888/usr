@@ -2,7 +2,7 @@
  * نموذج العقد: التحقق من المدخلات وبناء السجل المحفوظ.
  */
 import { APP_CONFIG } from '../config/app.config.js';
-import { contractEndDate, isValidISODate, todayISO, daysUntil } from '../utils/dates.js';
+import { contractEndDate, isValidISODate, todayISO, daysUntil, yearsBetween } from '../utils/dates.js';
 import { toNumber, normalizePhone, normalizeDigits, round2 } from '../utils/numbers.js';
 import { generateSchedule, carryOverStatuses, normalizeInstallments } from './installments.js';
 
@@ -11,6 +11,13 @@ export const statusById = (id) => APP_CONFIG.shopStatuses.find((s) => s.id === i
 /** يحوّل السجل الخام من قاعدة البيانات لشكل موحّد */
 export function normalizeContract(id, raw) {
   if (!raw) return null;
+  const startDate = raw.startDate || '';
+  const durationYears = Number(raw.durationYears) || 1;
+  const endDate = raw.endDate || contractEndDate(startDate, durationYears);
+  const installments = normalizeInstallments(raw.installments);
+  const storedAnnualRent = Number(raw.annualRent) || 0;
+  // الإيجار السنوي يُحسب دائماً من الدفعات الفعلية ومدة العقد (البداية ← النهاية)
+  const computed = computeAnnualRent(installments, startDate, endDate);
   return {
     id,
     centerId: raw.centerId || '',
@@ -22,13 +29,15 @@ export function normalizeContract(id, raw) {
     tenantName: raw.tenantName || '',
     tenantPhone: raw.tenantPhone || '',
     area: Number(raw.area) || 0,
-    annualRent: Number(raw.annualRent) || 0,
-    startDate: raw.startDate || '',
-    durationYears: Number(raw.durationYears) || 1,
-    endDate: raw.endDate || contractEndDate(raw.startDate, Number(raw.durationYears) || 1),
+    annualRent: computed || storedAnnualRent,
+    storedAnnualRent,
+    startDate,
+    durationYears,
+    endDate,
     paymentType: raw.paymentType || 'annual',
-    installments: normalizeInstallments(raw.installments),
+    installments,
     notes: raw.notes || '',
+    violations: raw.violations || '',
     createdBy: raw.createdBy || '—',
     createdAt: raw.createdAt || null,
     updatedBy: raw.updatedBy || '—',
@@ -42,9 +51,16 @@ export function normalizeContract(id, raw) {
  */
 export function buildContract(input, { manualRows = [], existing = null, actor = '' } = {}) {
   const errors = {};
-  const annualRent = toNumber(input.annualRent);
+  const isManual = input.paymentType === 'manual';
+  let annualRent = toNumber(input.annualRent);
   const area = input.area === '' ? 0 : toNumber(input.area);
-  const durationYears = Number(input.durationYears) || 1;
+  let durationYears = Number(input.durationYears) || 1;
+  let endDate = contractEndDate(input.startDate, durationYears);
+  if (isManual) {
+    // الدفع اليدوي: المدة من تاريخي البداية والنهاية، والإيجار السنوي يُحسب من الدفعات
+    endDate = input.endDate || '';
+    durationYears = Math.round(yearsBetween(input.startDate, endDate) * 10000) / 10000;
+  }
 
   if (!input.centerId) errors.centerId = 'اختر المركز التجاري';
   if (!normalizeDigits(input.shopNumber)) errors.shopNumber = 'أدخل رقم المحل';
@@ -53,9 +69,13 @@ export function buildContract(input, { manualRows = [], existing = null, actor =
   const phone = normalizePhone(input.tenantPhone);
   if (!phone || phone.replace('+', '').length < 9) errors.tenantPhone = 'رقم جوال غير صحيح';
   if (Number.isNaN(area) || area < 0) errors.area = 'المساحة يجب أن تكون رقماً';
-  if (Number.isNaN(annualRent) || annualRent <= 0) errors.annualRent = 'أدخل قيمة إيجار صحيحة';
+  if (!isManual && (Number.isNaN(annualRent) || annualRent <= 0)) errors.annualRent = 'أدخل قيمة إيجار صحيحة';
   if (!isValidISODate(input.startDate)) errors.startDate = 'اختر تاريخ البداية';
-  if (durationYears < 1 || durationYears > APP_CONFIG.maxDurationYears) errors.durationYears = 'مدة غير صحيحة';
+  if (isManual) {
+    if (!isValidISODate(endDate)) errors.endDate = 'اختر تاريخ نهاية العقد';
+    else if (durationYears <= 0) errors.endDate = 'تاريخ النهاية يجب أن يكون بعد تاريخ البداية';
+    else if (durationYears > APP_CONFIG.maxDurationYears) errors.endDate = `أقصى مدة ${APP_CONFIG.maxDurationYears} سنة`;
+  } else if (durationYears < 1 || durationYears > APP_CONFIG.maxDurationYears) errors.durationYears = 'مدة غير صحيحة';
 
   let installments = [];
   if (input.paymentType === 'manual') {
@@ -66,6 +86,11 @@ export function buildContract(input, { manualRows = [], existing = null, actor =
       installments.push({ n: i + 1, dueDate: r.dueDate, amount: round2(amt), paid: false, lateFlag: false });
     });
     installments.sort((a, b) => a.dueDate.localeCompare(b.dueDate)).forEach((x, i) => { x.n = i + 1; });
+  }
+
+  if (isManual && !errors.manual && !errors.endDate && !errors.startDate) {
+    annualRent = computeAnnualRent(installments, input.startDate, endDate);
+    if (!(annualRent > 0)) errors.manual = 'تعذر حساب الإيجار السنوي — تحقق من الدفعات وتاريخ النهاية';
   }
 
   if (Object.keys(errors).length) return { errors, record: null };
@@ -79,8 +104,9 @@ export function buildContract(input, { manualRows = [], existing = null, actor =
     const scheduleChanged =
       existing.startDate !== input.startDate ||
       existing.durationYears !== durationYears ||
+      existing.endDate !== endDate ||
       existing.paymentType !== input.paymentType ||
-      existing.annualRent !== annualRent ||
+      existing.storedAnnualRent !== annualRent ||
       input.paymentType === 'manual';
     installments = scheduleChanged ? carryOverStatuses(existing.installments, installments) : existing.installments;
   }
@@ -99,10 +125,11 @@ export function buildContract(input, { manualRows = [], existing = null, actor =
     annualRent,
     startDate: input.startDate,
     durationYears,
-    endDate: contractEndDate(input.startDate, durationYears),
+    endDate,
     paymentType: input.paymentType,
     installments: installments.map(stripInternal),
     notes: input.notes || '',
+    violations: input.violations || '',
     createdBy: existing ? existing.createdBy : actor,
     createdAt: existing ? existing.createdAt || now : now,
     updatedBy: existing ? actor : '—',
@@ -119,7 +146,22 @@ export function stripInternal(inst) {
   return out;
 }
 
-export const contractTotal = (c) => round2(c.annualRent * c.durationYears);
+/** إجمالي الدفعات المسجلة في العقد (هللات لتفادي أخطاء الكسور) */
+export const installmentsTotal = (list = []) => Math.round(list.reduce((s, i) => s + Math.round((Number(i.amount) || 0) * 100), 0)) / 100;
+
+/**
+ * الإيجار السنوي = مجموع الدفعات ÷ مدة العقد الفعلية بالسنوات (من تاريخ البداية حتى النهاية).
+ * تواريخ الدفعات لا تدخل في الحساب — هي مواعيد استحقاق فقط.
+ */
+export function computeAnnualRent(installments, startDate, endDate) {
+  const total = installmentsTotal(installments);
+  const years = yearsBetween(startDate, endDate);
+  if (!(total > 0) || !(years > 0)) return 0;
+  return round2(total / years);
+}
+
+/** إجمالي العقد = مجموع دفعاته الفعلية (أو الإيجار × المدة إن لم تكن له دفعات) */
+export const contractTotal = (c) => (c.installments?.length ? installmentsTotal(c.installments) : round2(c.annualRent * c.durationYears));
 
 export function contractPhase(c, today = todayISO()) {
   if (c.startDate && daysUntil(c.startDate, today) > 0) return 'pending';

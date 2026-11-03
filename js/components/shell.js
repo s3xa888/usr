@@ -4,7 +4,8 @@
 import { APP_CONFIG } from '../config/app.config.js';
 import { store, can } from '../core/store.js';
 import { allPages, navigate } from '../core/router.js';
-import { toggleTheme, resolvedTheme } from '../core/theme.js';
+import { resolvedTheme } from '../core/theme.js';
+import { toggleAndSaveTheme } from '../services/theme-pref.js';
 import { html, setHTML, on, $ } from '../utils/dom.js';
 import { icon } from './icons.js';
 import { logout } from '../services/auth.service.js';
@@ -76,7 +77,10 @@ export function mountShell(root) {
   bind(el, 'click', '[data-close-side]', closeSide);
   bind(el, 'click', '[data-nav]', closeSide);
   bind(el, 'click', '[data-logout]', () => logout());
-  bind(el, 'click', '[data-theme-toggle]', (e, b) => { toggleTheme(); setHTML(b, icon(resolvedTheme() === 'dark' ? 'sun' : 'moon', 19)); });
+  bind(el, 'click', '[data-theme-toggle]', () => toggleAndSaveTheme());
+  const onTheme = () => { const b = $('[data-theme-toggle]', el); if (b) setHTML(b, icon(resolvedTheme() === 'dark' ? 'sun' : 'moon', 19)); };
+  document.addEventListener('yusr:theme', onTheme);
+  unsubs.push(() => document.removeEventListener('yusr:theme', onTheme));
   bind(el, 'click', '[data-bell]', () => { renderPanel(); el.classList.add('panel-open'); });
   bind(el, 'click', '[data-close-panel]', closePanel);
   bind(el, 'click', '[data-panel] [data-open]', (e, b) => { closePanel(); openContractDetails(b.dataset.open); });

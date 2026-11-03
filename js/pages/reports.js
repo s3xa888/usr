@@ -9,6 +9,7 @@ import { renderChart, PALETTE } from '../components/charts.js';
 import { icon } from '../components/icons.js';
 import { openContractDetails } from './contract-details.js';
 import { on } from '../utils/dom.js';
+import { periodText } from '../utils/dates.js';
 
 let root;
 let centerFilter = '';
@@ -81,7 +82,7 @@ function render() {
             <td data-label="النشاط"><strong>${c.brandName}</strong> <span class="muted small">(${c.category})</span></td>
             <td data-label="المركز">${centerName(c.centerId)}</td>
             <td data-label="الإيجار السنوي" class="num">${money(c.annualRent)}</td>
-            <td data-label="المدة" class="num">${c.durationYears} سنة</td>
+            <td data-label="المدة">${periodText(c.startDate, c.endDate)}</td>
             <td data-label="الإجمالي" class="num"><strong class="text-success">${money(contractTotal(c))}</strong></td>
           </tr>`)}</tbody></table></div>`
       : emptyState({ ic: 'file', title: 'لا توجد عقود' })}
