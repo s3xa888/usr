@@ -10,6 +10,8 @@ import { icon } from '../components/icons.js';
 import { openContractDetails } from './contract-details.js';
 import { on } from '../utils/dom.js';
 import { periodText } from '../utils/dates.js';
+import { categoryGroupOf } from '../components/categories.js';
+import { contractPhase } from '../domain/contracts.js';
 
 let root;
 let centerFilter = '';
@@ -21,7 +23,18 @@ function render() {
   const list = centerFilter ? all.filter((c) => c.centerId === centerFilter) : all;
   const o = overview(list);
   const byCenter = incomeByCenter(store.get('centers'), all);
-  const cats = countBy(list, (c) => c.category);
+  const cats = countBy(list, (c) => categoryGroupOf(c.category));
+  const defIds = new Set(defaulters(list).map((d) => d.contract.id));
+  const catRows = Object.values(list.reduce((acc, c) => {
+    const k = c.category || 'أخرى';
+    acc[k] ||= { cat: k, group: categoryGroupOf(k), count: 0, area: 0, annual: 0, def: 0 };
+    acc[k].count++;
+    acc[k].area += c.area || 0;
+    if (contractPhase(c) !== 'expired') acc[k].annual += c.annualRent;
+    if (defIds.has(c.id)) acc[k].def++;
+    return acc;
+  }, {})).sort((a, b) => a.group.localeCompare(b.group, 'ar') || b.annual - a.annual);
+  const totalAnnual = catRows.reduce((t, r) => t + r.annual, 0);
   const def = defaulters(list);
   const defByCat = countBy(def.map((d) => d.contract), (c) => c.category);
   const brands = list.filter((c) => c.isBrand).length;
@@ -51,10 +64,27 @@ function render() {
     </section>
 
     <div class="chart-grid">
-      <section class="card"><header class="card-head"><h2>توزيع الأنشطة</h2></header><div class="chart-box"><canvas data-chart="cats"></canvas></div></section>
+      <section class="card"><header class="card-head"><h2>توزيع الأنشطة حسب المجموعة</h2></header><div class="chart-box"><canvas data-chart="cats"></canvas></div></section>
       <section class="card"><header class="card-head"><h2>براند / غير براند</h2></header><div class="chart-box"><canvas data-chart="brands"></canvas></div></section>
       <section class="card"><header class="card-head"><h2>الأنشطة الأكثر تعثراً</h2></header><div class="chart-box"><canvas data-chart="def"></canvas></div></section>
     </div>
+
+    <section class="card card-flush">
+      <header class="card-head card-head-pad"><h2>${icon('grid', 18)} تفصيل التصنيفات</h2></header>
+      ${catRows.length ? html`<div class="table-wrap"><table class="table table-cards">
+        <thead><tr><th>التصنيف</th><th>المجموعة</th><th>العقود</th><th>المساحة</th><th>الدخل السنوي (عقود سارية)</th><th>الحصة من الدخل</th><th>متعثرون</th></tr></thead>
+        <tbody>${catRows.map((r) => html`
+          <tr>
+            <td data-label="التصنيف"><strong>${r.cat}</strong></td>
+            <td data-label="المجموعة" class="muted">${r.group}</td>
+            <td data-label="العقود" class="num">${int(r.count)}</td>
+            <td data-label="المساحة" class="num">${r.area ? `${int(Math.round(r.area))} م²` : '—'}</td>
+            <td data-label="الدخل السنوي" class="num">${money(r.annual)}</td>
+            <td data-label="الحصة" class="num">${pct(r.annual, totalAnnual)}٪</td>
+            <td data-label="متعثرون" class="num">${r.def ? html`<span class="badge badge-danger">${r.def}</span>` : '—'}</td>
+          </tr>`)}</tbody></table></div>`
+      : emptyState({ ic: 'grid', title: 'لا توجد عقود' })}
+    </section>
 
     <section class="card card-flush danger-edge">
       <header class="card-head card-head-pad"><h2 class="text-danger">${icon('alert', 18)} المتعثرون</h2></header>

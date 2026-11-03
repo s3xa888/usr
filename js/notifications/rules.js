@@ -35,7 +35,7 @@ export function buildAlerts(contracts, centerNameOf, windows, today = todayISO()
         contractId: c.id,
         title: c.brandName,
         subtitle: where,
-        amount: inst.amount,
+        amount: inst.remaining,
         date: inst.dueDate,
         days,
         installment: inst.n,

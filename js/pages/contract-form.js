@@ -7,30 +7,45 @@ import { html, setHTML, formValues, on } from '../utils/dom.js';
 import { contractEndDate, formatDate, todayISO, addMonths, addDays, diffDays, isValidISODate, yearsBetween, periodText } from '../utils/dates.js';
 import { money, toNumber, round2 } from '../utils/numbers.js';
 import { buildContract, computeAnnualRent } from '../domain/contracts.js';
-import { generateSchedule } from '../domain/installments.js';
+import { generateSchedule, settledCounts } from '../domain/installments.js';
 import { contractsRepo } from '../services/repositories.js';
 import { friendlyError } from '../services/errors.js';
 import { openModal, toast, withBusy, showFieldErrors, confirmDialog } from '../components/overlay.js';
 import { options } from '../components/ui.js';
+import { categorySelect } from '../components/categories.js';
 import { icon } from '../components/icons.js';
 
 const durations = Array.from({ length: APP_CONFIG.maxDurationYears }, (_, i) => ({ id: i + 1, label: `${i + 1} ${i === 0 ? 'سنة' : i === 1 ? 'سنتان' : i < 10 ? 'سنوات' : 'سنة'}` }));
 
-export function openContractForm(existing = null, { presetCenterId = '' } = {}) {
-  const c = existing || {
+/**
+ * prefill: بيانات جاهزة لعقد جديد (مثل المستخرجة من ملف عقد إيجار PDF)
+ * importInfo: { source, warnings[] } تُعرض أعلى النموذج
+ */
+export function openContractForm(existing = null, { presetCenterId = '', prefill = null, importInfo = null } = {}) {
+  const blank = {
     centerId: presetCenterId || store.get('centers')[0]?.id || '', shopNumber: '', shopStatus: 'leased_open', brandName: '',
-    category: APP_CONFIG.categories[0], isBrand: false, tenantName: '', tenantPhone: '', area: '', annualRent: '',
-    startDate: todayISO(), durationYears: 1, endDate: contractEndDate(todayISO(), 1), paymentType: 'annual', notes: '', violations: '', installments: [],
+    category: '', isBrand: false, tenantName: '', tenantPhone: '', area: '', annualRent: '',
+    startDate: todayISO(), durationYears: 1, endDate: contractEndDate(todayISO(), 1), paymentType: 'annual', notes: '', violations: '', ejarNo: '', installments: [],
   };
-  let manualRows = existing?.installments?.length
-    ? existing.installments.map((i) => ({ dueDate: i.dueDate, amount: String(i.amount) }))
-    : [{ dueDate: c.startDate || '', amount: '' }, { dueDate: '', amount: '' }];
+  const c = existing || { ...blank, ...(prefill || {}) };
+  let manualRows = c.installments?.length
+    ? c.installments.map((i) => ({ dueDate: i.dueDate, amount: String(i.amount), vat: i.vat ? String(i.vat) : '' }))
+    : [{ dueDate: c.startDate || '', amount: '', vat: '' }, { dueDate: '', amount: '', vat: '' }];
 
   const centers = store.get('centers');
   if (!centers.length) { toast('أضف مركزاً تجارياً أولاً من صفحة المراكز', 'warning'); return; }
 
   const body = html`
     <form class="contract-form" novalidate>
+      ${importInfo ? html`
+        <div class="import-banner">
+          ${icon('file', 18)}
+          <div>
+            <strong>تم استخراج البيانات من ${importInfo.source}</strong>
+            <p>راجع البيانات، ثم أدخل <b>اسم البراند</b> و<b>التصنيف</b> واختر المركز التجاري — هذه غير موجودة في عقد إيجار.</p>
+            ${importInfo.warnings?.length ? html`<ul>${importInfo.warnings.map((w) => html`<li>${icon('alert', 13)} ${w}</li>`)}</ul>` : ''}
+          </div>
+        </div>` : ''}
       <fieldset class="form-section">
         <legend>${icon('store', 16)} الوحدة</legend>
         <div class="grid-3">
@@ -49,7 +64,7 @@ export function openContractForm(existing = null, { presetCenterId = '' } = {}) 
         <legend>${icon('sparkle', 16)} النشاط والمستأجر</legend>
         <div class="grid-3">
           <label class="field"><span>اسم النشاط / البراند</span><input class="input" name="brandName" value="${c.brandName}" placeholder="مثال: مطابع السروات" required></label>
-          <label class="field"><span>التصنيف</span><select class="input" name="category">${options(APP_CONFIG.categories, c.category)}</select></label>
+          <label class="field"><span>التصنيف</span>${categorySelect(c.category)}</label>
           <label class="field field-inline"><span>علامة تجارية معروفة (براند)</span>
             <span class="switch"><input type="checkbox" name="isBrand" ${c.isBrand ? 'checked' : ''}><i></i></span></label>
         </div>
@@ -67,6 +82,7 @@ export function openContractForm(existing = null, { presetCenterId = '' } = {}) 
           <label class="field" data-fixed><span>مدة العقد</span><select class="input" name="durationYears">${options(durations, Math.min(APP_CONFIG.maxDurationYears, Math.max(1, Math.round(c.durationYears))))}</select></label>
           <label class="field" data-manual-only hidden><span>تاريخ نهاية العقد</span><input class="input" type="date" name="endDate" value="${c.endDate || ''}"></label>
         </div>
+        <label class="field field-narrow"><span>رقم العقد في منصة إيجار (اختياري)</span><input class="input num" name="ejarNo" value="${c.ejarNo || ''}" maxlength="40" dir="ltr" placeholder="20383047848 / 2-0"></label>
         <div class="field"><span>طريقة الدفع</span>
           <div class="segmented wrap" role="radiogroup">
             ${APP_CONFIG.paymentTypes.map((p) => html`<label class="seg"><input type="radio" name="paymentType" value="${p.id}" ${c.paymentType === p.id ? 'checked' : ''}><span>${p.label}</span></label>`)}
@@ -100,20 +116,21 @@ export function openContractForm(existing = null, { presetCenterId = '' } = {}) 
       /** ملخص الدفعات اليدوية: المجموع والإيجار السنوي المحسوب من مدة العقد */
       const manualCalc = () => {
         const v = formValues(form);
-        const rows = manualRows.map((r) => ({ amount: toNumber(r.amount) || 0 }));
+        const rows = manualRows.map((r) => ({ amount: toNumber(r.amount) || 0, vat: toNumber(r.vat) || 0 }));
         const total = round2(rows.reduce((s, r) => s + r.amount, 0));
+        const vat = round2(rows.reduce((s, r) => s + r.vat, 0));
         const years = yearsBetween(v.startDate, v.endDate);
         const annual = computeAnnualRent(rows, v.startDate, v.endDate);
-        return { total, years, annual, period: periodText(v.startDate, v.endDate) };
+        return { total, vat, years, annual, period: periodText(v.startDate, v.endDate) };
       };
       const manualSummary = () => {
         const m = manualCalc();
         if (!(m.years > 0)) return html`<div class="calc-box calc-warn">${icon('alert', 16)} حدد تاريخ بداية ونهاية صحيحين ليتم حساب الإيجار السنوي</div>`;
         return html`
           <div class="calc-box">
-            <div><span>مجموع الدفعات</span><strong class="num">${money(m.total)}</strong></div>
+            <div><span>مجموع الدفعات</span><strong class="num">${money(m.total)}</strong>${m.vat ? html`<small class="muted">منها ضريبة ${money(m.vat)}</small>` : ''}</div>
             <div><span>مدة العقد</span><strong>${m.period}</strong></div>
-            <div class="calc-main"><span>الإيجار السنوي المحسوب</span><strong class="num">${m.annual ? money(m.annual) : '—'}</strong></div>
+            <div class="calc-main"><span>الإيجار السنوي المحسوب${m.vat ? ' (بدون الضريبة)' : ''}</span><strong class="num">${m.annual ? money(m.annual) : '—'}</strong></div>
           </div>`;
       };
       const updateManualSummary = () => { const box = manualBox.querySelector('[data-msum]'); if (box) setHTML(box, manualSummary()); };
@@ -128,12 +145,14 @@ export function openContractForm(existing = null, { presetCenterId = '' } = {}) 
                 <span class="manual-n">${i + 1}</span>
                 <input class="input" type="date" data-mi="${i}" data-mk="dueDate" value="${r.dueDate}" aria-label="تاريخ الدفعة ${i + 1}">
                 <input class="input num" data-mi="${i}" data-mk="amount" value="${r.amount}" inputmode="decimal" placeholder="المبلغ" aria-label="مبلغ الدفعة ${i + 1}">
+                <input class="input num manual-vat" data-mi="${i}" data-mk="vat" value="${r.vat || ''}" inputmode="decimal" placeholder="منها ضريبة" aria-label="ضريبة الدفعة ${i + 1}" title="ضريبة القيمة المضافة ضمن المبلغ (اختياري)">
                 <button type="button" class="icon-btn" data-remove="${i}" aria-label="حذف" ${manualRows.length < 2 ? 'disabled' : ''}>${icon('trash', 16)}</button>
               </div>`)}
           </div>
           <div class="manual-actions">
             <button type="button" class="btn btn-subtle btn-sm" data-add-row>${icon('plus', 16)} إضافة دفعة</button>
             ${manualRows.length > 1 ? html`<button type="button" class="btn btn-ghost btn-sm" data-split>توزيع التواريخ بالتساوي على مدة العقد</button>` : ''}
+            <button type="button" class="btn btn-ghost btn-sm" data-vat15 title="يحسب الضريبة لكل دفعة على أن المبالغ شاملة 15٪">المبالغ شاملة ضريبة 15٪</button>
           </div>`);
       };
 
@@ -168,7 +187,11 @@ export function openContractForm(existing = null, { presetCenterId = '' } = {}) 
       form.addEventListener('change', (e) => { if (e.target.dataset.mi === undefined) refresh(); });
       on(manualBox, 'click', '[data-add-row]', () => {
         const last = manualRows[manualRows.length - 1];
-        manualRows.push({ dueDate: last?.dueDate ? addMonths(last.dueDate, 1) : '', amount: '' });
+        manualRows.push({ dueDate: last?.dueDate ? addMonths(last.dueDate, 1) : '', amount: '', vat: '' });
+        renderManual();
+      });
+      on(manualBox, 'click', '[data-vat15]', () => {
+        manualRows.forEach((r) => { const a = toNumber(r.amount); r.vat = a > 0 ? String(round2((a * 15) / 115)) : ''; });
         renderManual();
       });
       on(manualBox, 'click', '[data-remove]', (e, btn) => { manualRows.splice(+btn.dataset.remove, 1); renderManual(); });
@@ -188,18 +211,31 @@ export function openContractForm(existing = null, { presetCenterId = '' } = {}) 
 
       el.querySelector('[data-save]').addEventListener('click', (e) => withBusy(e.currentTarget, async () => {
         const v = formValues(form);
-        const { errors, record } = buildContract(v, { manualRows, existing, actor: actorName() });
+        const { errors: e1, record: r1 } = buildContract(v, { manualRows, existing, actor: actorName() });
+        let errors = e1; let record = r1;
+        if (!v.category) { errors = { ...(errors || {}), category: 'اختر التصنيف' }; record = null; }
+        if (record && !existing && v.ejarNo && store.get('contracts').some((x) => x.ejarNo && x.ejarNo === v.ejarNo.trim())) {
+          const ok = await confirmDialog({ title: 'عقد مكرر؟', message: `يوجد عقد مسجل بنفس رقم عقد إيجار (${v.ejarNo}). هل تريد حفظه مرة أخرى؟`, confirmText: 'حفظ على أي حال' });
+          if (!ok) return;
+        }
         if (errors) { showFieldErrors(form, errors); toast('تحقق من الحقول المظللة', 'warning'); return; }
         showFieldErrors(form, {});
 
         if (existing) {
-          const paidCount = existing.installments.filter((i) => i.paid).length;
+          const counts = settledCounts(existing.installments, record.installments);
           const changed = record.installments.length !== existing.installments.length
             || record.installments.some((x, i) => x.dueDate !== existing.installments[i]?.dueDate || x.amount !== existing.installments[i]?.amount);
-          if (paidCount && changed) {
+          if (counts.lost) {
+            const ok = await confirmDialog({
+              title: '⚠️ ستفقد حالات سداد',
+              message: `هذا التعديل سيحذف ${counts.lost} دفعة مسددة (أو عليها مبالغ/إعفاء/خصم) لأن صفوفها لم تعد موجودة في الجدول. قبل التعديل: ${counts.before} — بعده: ${counts.after}. هل أنت متأكد؟`,
+              confirmText: 'نعم، احفظ', danger: true,
+            });
+            if (!ok) return;
+          } else if (counts.before && changed) {
             const ok = await confirmDialog({
               title: 'تغيير جدول الدفعات',
-              message: `هذا العقد فيه ${paidCount} دفعة مسددة. تغيير المدة أو طريقة الدفع سيعيد بناء الجدول مع الإبقاء على حالات السداد حسب ترتيب الدفعات. هل تريد المتابعة؟`,
+              message: `سيتم تحديث جدول الدفعات مع الإبقاء على حالات السداد (${counts.before} دفعة مسددة تبقى كما هي — تُربط بتاريخ استحقاقها). متابعة؟`,
               confirmText: 'متابعة',
             });
             if (!ok) return;

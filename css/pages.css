@@ -68,7 +68,8 @@
 .manual-box { display: flex; flex-direction: column; gap: 10px; padding: 14px; border: 1px dashed var(--border-strong); border-radius: var(--r); }
 .manual-head { display: flex; justify-content: space-between; align-items: center; gap: 8px; flex-wrap: wrap; }
 .manual-rows { display: flex; flex-direction: column; gap: 8px; }
-.manual-row { display: grid; grid-template-columns: 28px 1fr 1fr 38px; gap: 8px; align-items: center; }
+.manual-row { display: grid; grid-template-columns: 28px minmax(0, 1.2fr) minmax(0, 1fr) minmax(0, .8fr) 38px; gap: 8px; align-items: center; }
+@media (max-width: 560px) { .manual-row { grid-template-columns: 26px 1fr 1fr 34px; } .manual-row .manual-vat { grid-column: 2 / 4; } }
 .manual-n { width: 26px; height: 26px; border-radius: 8px; display: grid; place-items: center; background: var(--surface-3); font-size: 12px; font-weight: 700; color: var(--text-2); }
 .manual-actions { display: flex; gap: 8px; flex-wrap: wrap; }
 .segmented.wrap { display: flex; }
@@ -144,3 +145,56 @@
 .roi-grid small { font-size: 11px; }
 @media (max-width: 900px) { .roi-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
 @media (max-width: 560px) { .roi-hero { grid-template-columns: 1fr; } .roi-rate strong { font-size: 26px; } }
+
+/* ===== مبالغ الدفعة ===== */
+.dot-info { background: var(--info); }
+.amt-summary { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 1px; background: var(--border); border: 1px solid var(--border); border-radius: var(--r); overflow: hidden; }
+.amt-summary > div { background: var(--surface-2); padding: 9px 11px; display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.amt-summary span { font-size: 11.5px; color: var(--text-3); }
+.amt-summary strong { font-size: 14px; }
+.amt-summary small { font-size: 10.5px; }
+.amt-remaining { background: var(--danger-soft) !important; }
+.amt-remaining strong { color: var(--danger); font-size: 15.5px; }
+.amt-remaining.is-zero { background: var(--success-soft) !important; }
+.amt-remaining.is-zero strong { color: var(--success); }
+.amt-title { font-size: 14px; font-weight: 600; display: flex; align-items: center; gap: 6px; margin: 18px 0 8px; }
+.amt-title .ico { color: var(--text-3); }
+.pay-list { list-style: none; margin: 0; padding: 0; border: 1px solid var(--border); border-radius: var(--r); overflow: hidden; }
+.pay-list li { display: flex; align-items: center; gap: 6px; padding: 9px 12px; border-top: 1px solid var(--border); }
+.pay-list li:first-child { border-top: 0; }
+.pay-main { flex: 1; display: flex; flex-direction: column; gap: 1px; min-width: 0; }
+.amt-form { border-top: 1px dashed var(--border); margin-top: 16px; }
+.amt-form .grid-2 { margin-bottom: 10px; }
+.amt-form > .field { margin-bottom: 10px; }
+@media (max-width: 560px) { .amt-summary { grid-template-columns: 1fr 1fr; } .amt-remaining { grid-column: span 2; } }
+
+/* ===== استيراد عقد إيجار ===== */
+.import-banner { display: flex; gap: 10px; padding: 12px 14px; border-radius: var(--r); background: var(--primary-soft); color: var(--text); margin-bottom: 14px; }
+.import-banner > .ico { color: var(--primary); flex-shrink: 0; margin-top: 2px; }
+.import-banner p { margin: 2px 0 0; font-size: 13px; color: var(--text-2); }
+.import-banner ul { list-style: none; margin: 8px 0 0; padding: 0; display: flex; flex-direction: column; gap: 4px; }
+.import-banner li { font-size: 12.5px; color: var(--warning); display: flex; gap: 6px; align-items: flex-start; }
+.field-narrow { max-width: 340px; margin-top: 10px; }
+.cat-list { display: flex; flex-wrap: wrap; gap: 8px; }
+.cat-list .chip { font-size: 12.5px; padding: 5px 6px 5px 10px; gap: 6px; }
+.cat-list .chip button { background: none; border: 0; color: inherit; cursor: pointer; padding: 0; display: grid; place-items: center; }
+.cat-groups { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 12px; }
+.cat-groups > div { background: var(--surface-2); border: 1px solid var(--border); border-radius: var(--r); padding: 10px 12px; }
+.cat-groups strong { display: block; font-size: 13px; margin-bottom: 4px; }
+.cat-groups p { margin: 0; font-size: 12px; color: var(--text-3); line-height: 1.7; }
+/* أرقام المحلات المتعددة (مثل 1-8) تُعرض من اليسار لليمين دائماً */
+.detail-shop, .shop-no { direction: ltr; unicode-bidi: isolate; }
+
+/* ===== مطابقة عقد إيجار ===== */
+.rec-top { display: flex; gap: 10px; padding: 12px 14px; border-radius: var(--r); margin-bottom: 10px; }
+.rec-top p { margin: 3px 0 0; font-size: 13px; color: var(--text-2); display: flex; gap: 6px; align-items: center; flex-wrap: wrap; }
+.rec-top.is-ok { background: var(--success-soft); } .rec-top.is-ok > .ico { color: var(--success); }
+.rec-top.is-warn { background: var(--warning-soft); } .rec-top.is-warn > .ico { color: var(--warning); }
+.rec-top.is-bad { background: var(--danger-soft); } .rec-top.is-bad > .ico { color: var(--danger); }
+.rec-blockers { list-style: none; margin: 0 0 10px; padding: 10px 14px; border-radius: var(--r); background: var(--danger-soft); color: var(--danger); font-size: 13px; display: flex; flex-direction: column; gap: 6px; }
+.rec-blockers.is-warn { background: var(--warning-soft); color: var(--warning); }
+.rec-blockers li { display: flex; gap: 6px; align-items: flex-start; }
+.strike { text-decoration: line-through; display: block; }
+.text-warning { color: var(--warning) !important; }
+.check-row { display: flex; align-items: center; gap: 8px; margin-top: 10px; font-size: 13px; cursor: pointer; }
+.rec-table tr.rec-orphan td { background: var(--danger-soft); }

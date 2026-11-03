@@ -13,6 +13,7 @@ import { pageHeader, emptyState, shopStatusPill, nextInstallmentCell, options, l
 import { confirmDialog, toast } from '../components/overlay.js';
 import { icon } from '../components/icons.js';
 import { openContractForm } from './contract-form.js';
+import { importEjarPdf, IMPORT_ERRORS } from '../services/pdf-import.js';
 import { openContractDetails } from './contract-details.js';
 
 const filters = { q: '', center: '', view: 'all' };
@@ -118,7 +119,10 @@ export default {
         subtitle: 'جميع عقود الإيجار مقسمة حسب المراكز التجارية',
         actions: html`
           <button class="btn btn-ghost" data-export-all>${icon('download', 18)} تصدير Excel</button>
-          ${can.add() ? html`<button class="btn btn-primary" data-new>${icon('plus', 18)} عقد جديد</button>` : ''}`,
+          ${can.add() ? html`
+            <label class="btn btn-ghost" data-import title="يقرأ بيانات العقد والدفعات من ملف PDF صادر من منصة إيجار">${icon('upload', 18)} استيراد عقد إيجار PDF
+              <input type="file" accept="application/pdf,.pdf" hidden data-import-file></label>
+            <button class="btn btn-primary" data-new>${icon('plus', 18)} عقد جديد</button>` : ''}`,
       })}
       <div class="toolbar card">
         <label class="search">${icon('search', 18)}<input class="input" type="search" data-q placeholder="ابحث باسم النشاط، رقم المحل، المستأجر، الجوال…" value="${filters.q}"></label>
@@ -138,6 +142,22 @@ export default {
     $('[data-center]', el).addEventListener('change', (e) => { filters.center = e.target.value; renderList(); });
     on(el, 'change', 'input[name=view]', (e, input) => { filters.view = input.value; renderList(); });
     on(el, 'click', '[data-new]', () => openContractForm(null, { presetCenterId: filters.center }));
+    on(el, 'change', '[data-import-file]', async (e, input) => {
+      const file = input.files?.[0];
+      input.value = '';
+      if (!file) return;
+      const label = input.closest('[data-import]');
+      label.classList.add('is-busy');
+      try {
+        const r = await importEjarPdf(file);
+        if (!r.ok) { toast(IMPORT_ERRORS[r.reason] || 'تعذر قراءة الملف', 'warning', 5000); return; }
+        openContractForm(null, {
+          presetCenterId: filters.center,
+          prefill: { ...r.data, shopStatus: 'leased_open' },
+          importInfo: { source: r.source, warnings: r.warnings },
+        });
+      } finally { label.classList.remove('is-busy'); }
+    });
     on(el, 'click', '[data-new-in]', (e, b) => openContractForm(null, { presetCenterId: b.dataset.newIn }));
     on(el, 'click', '[data-export-all]', () => exportContractsCSV(filtered(), 'كل_العقود'));
     on(el, 'click', '[data-export]', (e, b) => exportContractsCSV(filtered().filter((c) => c.centerId === b.dataset.export), centerName(b.dataset.export)));

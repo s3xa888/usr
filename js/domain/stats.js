@@ -13,10 +13,11 @@ export function overview(contracts, today = todayISO()) {
   let outstandingTotal = 0, outstandingCount = 0, next30Total = 0, next30Count = 0, collectedTotal = 0;
   contracts.forEach((c) => {
     c.installments.forEach((i) => {
-      if (i.paid) { collectedTotal += i.amount; return; }
-      if (isOutstanding(i, today)) { outstandingTotal += i.amount; outstandingCount++; return; }
+      collectedTotal += i.paidAmount;
+      if (i.paid) return;
+      if (isOutstanding(i, today)) { outstandingTotal += i.remaining; outstandingCount++; return; }
       const d = daysUntil(i.dueDate, today);
-      if (d > 0 && d <= 30) { next30Total += i.amount; next30Count++; }
+      if (d > 0 && d <= 30) { next30Total += i.remaining; next30Count++; }
     });
   });
   const statusCounts = { vacant: 0, leased_closed: 0, leased_open: 0 };
@@ -71,7 +72,7 @@ export function entitlements(contracts, today = todayISO()) {
   return contracts
     .map((c) => {
       const items = c.installments.filter((i) => isOutstanding(i, today)).sort((a, b) => a.dueDate.localeCompare(b.dueDate));
-      return { contract: c, items, total: sum(items, (i) => i.amount), oldest: items[0]?.dueDate || '' };
+      return { contract: c, items, total: sum(items, (i) => i.remaining), oldest: items[0]?.dueDate || '' };
     })
     .filter((x) => x.items.length)
     .sort((a, b) => a.oldest.localeCompare(b.oldest));

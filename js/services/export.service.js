@@ -84,6 +84,8 @@ const REPORT_CSS = `
   #print-root .t-danger { background: #fee2e2; color: #b91c1c; } #print-root .t-warning { background: #fef3c7; color: #b45309; }
   #print-root .t-success { background: #dcfce7; color: #15803d; } #print-root .t-info { background: #e0f2fe; color: #0369a1; }
   #print-root .section { break-inside: avoid; page-break-inside: avoid; margin-bottom: 22px; }
+  #print-root tfoot th { background: #f8fafc; color: #0f172a; }
+  #print-root .r-sign { display: flex; justify-content: space-between; margin-top: 40px; color: #475569; }
   #print-root .r-foot { margin-top: 24px; border-top: 1px solid #e2e8f0; padding-top: 10px; text-align: center; color: #94a3b8; font-size: 10px; }
 `;
 
@@ -133,10 +135,12 @@ function entitlementSection(entry) {
         <div><b>الجوال:</b> <span class="num">${c.tenantPhone}</span></div>
       </div>
       <table>
-        <thead><tr><th>رقم الدفعة</th><th>تاريخ الاستحقاق</th><th>المبلغ</th><th>الحالة</th></tr></thead>
+        <thead><tr><th>رقم الدفعة</th><th>تاريخ الاستحقاق</th><th>قيمة الدفعة</th><th>المسدد</th><th>إعفاء / خصم</th><th>المتبقي</th><th>الحالة</th></tr></thead>
         <tbody>${entry.items.map((i) => {
           const meta = STATE_META[installmentState(i)];
-          return html`<tr><td>#${i.n}</td><td class="num">${formatDate(i.dueDate)}</td><td class="num">${money(i.amount)}</td><td><span class="tag t-${meta.tone}">${meta.label}</span></td></tr>`;
+          return html`<tr><td>#${i.n}</td><td class="num">${formatDate(i.dueDate)}</td><td class="num">${money(i.amount)}</td>
+            <td class="num">${i.paidAmount ? money(i.paidAmount) : '—'}</td><td class="num">${i.waived + i.discount ? money(i.waived + i.discount) : '—'}</td>
+            <td class="num"><b>${money(i.remaining)}</b></td><td><span class="tag t-${meta.tone}">${meta.label}</span></td></tr>`;
         })}</tbody>
       </table>
       <div class="total"><span>إجمالي المستحق</span><span class="num">${money(entry.total)}</span></div>
@@ -153,11 +157,15 @@ export function printEntitlements(entries, title = 'تقرير الاستحقا�
 }
 
 export function printStatement(contract) {
+  const lastPayDate = (i) => (i.payments.length ? i.payments[i.payments.length - 1].date : i.paidAt ? toISO(new Date(i.paidAt)) : '');
   const rows = contract.installments.map((i) => {
     const meta = STATE_META[installmentState(i)];
     return html`<tr><td>#${i.n}</td><td class="num">${formatDate(i.dueDate)}</td><td class="num">${money(i.amount)}</td>
-      <td><span class="tag t-${meta.tone}">${meta.label}</span></td><td class="num">${i.paidAt ? formatDate(toISO(new Date(i.paidAt))) : '—'}</td></tr>`;
+      <td class="num">${i.paidAmount ? money(i.paidAmount) : '—'}</td><td class="num">${i.waived + i.discount ? money(i.waived + i.discount) : '—'}</td>
+      <td class="num">${i.remaining ? money(i.remaining) : '—'}</td>
+      <td><span class="tag t-${meta.tone}">${meta.label}</span></td><td class="num">${lastPayDate(i) ? formatDate(lastPayDate(i)) : '—'}</td></tr>`;
   });
+  const sum = (f) => contract.installments.reduce((t, i) => t + f(i), 0);
   const body = html`
     ${brandHeader('كشف حساب عقد')}
     <div class="r-box">
@@ -169,8 +177,35 @@ export function printStatement(contract) {
       <div><b>الإيجار السنوي:</b> <span class="num">${money(contract.annualRent)}</span></div>
     </div>
     <h2>جدول الدفعات</h2>
-    <table><thead><tr><th>#</th><th>الاستحقاق</th><th>المبلغ</th><th>الحالة</th><th>تاريخ السداد</th></tr></thead><tbody>${rows}</tbody></table>`;
+    <table><thead><tr><th>#</th><th>الاستحقاق</th><th>المبلغ</th><th>المسدد</th><th>إعفاء / خصم</th><th>المتبقي</th><th>الحالة</th><th>آخر سداد</th></tr></thead><tbody>${rows}</tbody>
+      <tfoot><tr><th colspan="2">الإجمالي</th><th class="num">${money(sum((i) => i.amount))}</th><th class="num">${money(sum((i) => i.paidAmount))}</th><th class="num">${money(sum((i) => i.waived + i.discount))}</th><th class="num">${money(sum((i) => i.remaining))}</th><th colspan="2"></th></tr></tfoot></table>`;
   printDocument(`كشف ${contract.brandName}`, String(body));
+}
+
+/** رقم سند فريد مأخوذ من تاريخ السداد ومعرّف المبلغ */
+const receiptNo = (p) => `R-${(p.date || todayISO()).replace(/-/g, '')}-${String(p.id || '').slice(-6).toUpperCase()}`;
+
+/** سند قبض لمبلغ مسدد */
+export function printReceipt(contract, inst, payment) {
+  const body = html`
+    ${brandHeader('سند قبض')}
+    <div class="r-box">
+      <div><b>رقم السند:</b> <span class="num">${receiptNo(payment)}</span></div>
+      <div><b>تاريخ السداد:</b> <span class="num">${formatDate(payment.date, { long: true })}</span></div>
+      <div><b>استلمنا من:</b> ${contract.tenantName}</div>
+      <div><b>الجوال:</b> <span class="num">${contract.tenantPhone}</span></div>
+      <div><b>النشاط:</b> ${contract.brandName} — محل ${contract.shopNumber}</div>
+      <div><b>المركز:</b> ${centerName(contract.centerId)}</div>
+      ${contract.ejarNo ? html`<div><b>رقم عقد إيجار:</b> <span class="num">${contract.ejarNo}</span></div>` : ''}
+      <div><b>طريقة الدفع:</b> ${payment.method || '—'}</div>
+    </div>
+    <div class="total"><span>المبلغ المستلم</span><span class="num">${money(payment.amount)}</span></div>
+    <h2>عن الدفعة</h2>
+    <table><thead><tr><th>رقم الدفعة</th><th>تاريخ الاستحقاق</th><th>قيمة الدفعة</th><th>إجمالي المسدد</th><th>إعفاء / خصم</th><th>المتبقي</th></tr></thead>
+      <tbody><tr><td>#${inst.n}</td><td class="num">${formatDate(inst.dueDate)}</td><td class="num">${money(inst.amount)}</td><td class="num">${money(inst.paidAmount)}</td><td class="num">${money(inst.waived + inst.discount)}</td><td class="num"><b>${money(inst.remaining)}</b></td></tr></tbody></table>
+    ${payment.note ? html`<p><b>ملاحظة:</b> ${payment.note}</p>` : ''}
+    <div class="r-sign"><div>المستلم: ${payment.by || '................'}</div><div>التوقيع: ................</div></div>`;
+  printDocument(`سند ${receiptNo(payment)}`, String(body));
 }
 
 export { raw };

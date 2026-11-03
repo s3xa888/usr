@@ -38,6 +38,8 @@ export function normalizeContract(id, raw) {
     installments,
     notes: raw.notes || '',
     violations: raw.violations || '',
+    ejarNo: raw.ejarNo || '',
+    legacyId: raw.legacyId || '',
     createdBy: raw.createdBy || '—',
     createdAt: raw.createdAt || null,
     updatedBy: raw.updatedBy || '—',
@@ -82,8 +84,10 @@ export function buildContract(input, { manualRows = [], existing = null, actor =
     if (!manualRows.length) errors.manual = 'أضف دفعة واحدة على الأقل';
     manualRows.forEach((r, i) => {
       const amt = toNumber(r.amount);
+      const vat = r.vat === undefined || String(r.vat).trim() === '' ? 0 : toNumber(r.vat);
       if (!isValidISODate(r.dueDate) || Number.isNaN(amt) || amt <= 0) errors.manual = `تحقق من تاريخ ومبلغ الدفعة رقم ${i + 1}`;
-      installments.push({ n: i + 1, dueDate: r.dueDate, amount: round2(amt), paid: false, lateFlag: false });
+      else if (Number.isNaN(vat) || vat < 0 || vat >= amt) errors.manual = `قيمة الضريبة في الدفعة رقم ${i + 1} غير صحيحة`;
+      installments.push({ n: i + 1, dueDate: r.dueDate, amount: round2(amt), vat: round2(vat || 0), paid: false, lateFlag: false });
     });
     installments.sort((a, b) => a.dueDate.localeCompare(b.dueDate)).forEach((x, i) => { x.n = i + 1; });
   }
@@ -130,6 +134,8 @@ export function buildContract(input, { manualRows = [], existing = null, actor =
     installments: installments.map(stripInternal),
     notes: input.notes || '',
     violations: input.violations || '',
+    ...(String(input.ejarNo || '').trim() ? { ejarNo: String(input.ejarNo).trim().slice(0, 40) } : {}),
+    ...(existing?.legacyId ? { legacyId: existing.legacyId } : {}),
     createdBy: existing ? existing.createdBy : actor,
     createdAt: existing ? existing.createdAt || now : now,
     updatedBy: existing ? actor : '—',
@@ -138,11 +144,28 @@ export function buildContract(input, { manualRows = [], existing = null, actor =
   return { errors: null, record };
 }
 
-/** يزيل الحقول الداخلية والقيم الفارغة قبل الحفظ */
+/** يزيل الحقول الداخلية (المحسوبة) والقيم الفارغة قبل الحفظ */
 export function stripInternal(inst) {
   const out = { n: inst.n, dueDate: inst.dueDate, amount: round2(inst.amount), paid: !!inst.paid, lateFlag: !!inst.lateFlag };
+  if (Number(inst.vat) > 0) out.vat = round2(inst.vat);
   if (inst.paidAt) out.paidAt = inst.paidAt;
   if (inst.paidBy) out.paidBy = inst.paidBy;
+  if (inst.payments?.length) {
+    out.payments = Object.fromEntries(inst.payments.map((p) => [p.id, paymentRecord(p)]));
+  }
+  if (Number(inst.waived) > 0) out.waived = round2(inst.waived);
+  if (Number(inst.discount) > 0) out.discount = round2(inst.discount);
+  if (inst.adjNote) out.adjNote = String(inst.adjNote).slice(0, 300);
+  return out;
+}
+
+/** شكل المبلغ المسجل كما يُحفظ في قاعدة البيانات */
+export function paymentRecord(p) {
+  const out = { amount: round2(p.amount), date: p.date };
+  if (p.method) out.method = String(p.method).slice(0, 30);
+  if (p.note) out.note = String(p.note).slice(0, 200);
+  if (p.by) out.by = String(p.by).slice(0, 80);
+  if (p.at) out.at = Number(p.at);
   return out;
 }
 
@@ -150,18 +173,21 @@ export function stripInternal(inst) {
 export const installmentsTotal = (list = []) => Math.round(list.reduce((s, i) => s + Math.round((Number(i.amount) || 0) * 100), 0)) / 100;
 
 /**
- * الإيجار السنوي = مجموع الدفعات ÷ مدة العقد الفعلية بالسنوات (من تاريخ البداية حتى النهاية).
+ * الإيجار السنوي = مجموع الدفعات (بدون الضريبة) ÷ مدة العقد الفعلية بالسنوات (من تاريخ البداية حتى النهاية).
  * تواريخ الدفعات لا تدخل في الحساب — هي مواعيد استحقاق فقط.
  */
 export function computeAnnualRent(installments, startDate, endDate) {
-  const total = installmentsTotal(installments);
+  const total = rentTotal(installments);
   const years = yearsBetween(startDate, endDate);
   if (!(total > 0) || !(years > 0)) return 0;
   return round2(total / years);
 }
 
-/** إجمالي العقد = مجموع دفعاته الفعلية (أو الإيجار × المدة إن لم تكن له دفعات) */
-export const contractTotal = (c) => (c.installments?.length ? installmentsTotal(c.installments) : round2(c.annualRent * c.durationYears));
+/** مجموع قيمة الإيجار بدون ضريبة القيمة المضافة (الضريبة ليست دخلاً للمؤجر) */
+export const rentTotal = (list = []) => Math.round(list.reduce((s, i) => s + Math.round((Number(i.amount) || 0) * 100) - Math.round((Number(i.vat) || 0) * 100), 0)) / 100;
+
+/** إجمالي العقد (بدون الضريبة) = مجموع دفعاته الفعلية (أو الإيجار × المدة إن لم تكن له دفعات) */
+export const contractTotal = (c) => (c.installments?.length ? rentTotal(c.installments) : round2(c.annualRent * c.durationYears));
 
 export function contractPhase(c, today = todayISO()) {
   if (c.startDate && daysUntil(c.startDate, today) > 0) return 'pending';
@@ -171,7 +197,7 @@ export function contractPhase(c, today = todayISO()) {
 
 export function matchesSearch(c, q, centerName = '') {
   if (!q) return true;
-  const hay = [c.brandName, c.shopNumber, c.tenantName, c.tenantPhone, c.category, centerName].join(' ').toLowerCase();
+  const hay = [c.brandName, c.shopNumber, c.tenantName, c.tenantPhone, c.category, centerName, c.ejarNo].join(' ').toLowerCase();
   const terms = String(q).replace(/[٠-٩]/g, (d) => '٠١٢٣٤٥٦٧٨٩'.indexOf(d)).toLowerCase().split(/\s+/).filter(Boolean);
   return terms.every((t) => hay.includes(t));
 }

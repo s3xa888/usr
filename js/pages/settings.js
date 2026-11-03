@@ -5,6 +5,7 @@ import { callFunction } from '../core/firebase.js';
 import { html, setHTML, on, $, formValues } from '../utils/dom.js';
 import { formatTimestamp } from '../utils/dates.js';
 import { money } from '../utils/numbers.js';
+import { customCategories, CUSTOM_GROUP } from '../components/categories.js';
 import { settingsRepo } from '../services/repositories.js';
 import { changeOwnPassword, logout } from '../services/auth.service.js';
 import { readLegacy, importLegacy, deleteLegacy } from '../services/migration.service.js';
@@ -25,6 +26,7 @@ import { passwordField, bindPasswordTools } from './users.js';
 const TABS = [
   { id: 'brand', label: 'هوية المنصة', ic: 'palette', guard: () => can.admin() },
   { id: 'notify', label: 'الإشعارات', ic: 'bell' },
+  { id: 'categories', label: 'التصنيفات', ic: 'grid', guard: () => can.admin() },
   { id: 'account', label: 'حسابي', ic: 'user' },
   { id: 'data', label: 'البيانات', ic: 'database', guard: () => can.owner() },
   { id: 'audit', label: 'سجل العمليات', ic: 'history', guard: () => can.admin() },
@@ -311,6 +313,7 @@ function dataTab(el) {
 /* ---------------- سجل العمليات ---------------- */
 const ACTIONS = {
   'contract.add': 'إضافة عقد', 'contract.edit': 'تعديل عقد', 'contract.delete': 'حذف عقد', 'installment.update': 'تحديث دفعة',
+  'installment.payment': 'تسجيل مبلغ مسدد', 'installment.payment_delete': 'حذف مبلغ مسدد', 'installment.adjust': 'إعفاء / خصم',
   'center.add': 'إضافة مركز', 'center.rename': 'تعديل مركز', 'center.delete': 'حذف مركز', 'center.location': 'تحديد موقع مركز', 'center.investment': 'بيانات استثمار مركز',
   'user.add': 'إضافة مستخدم', 'user.edit': 'تعديل مستخدم', 'user.delete': 'حذف مستخدم', 'user.password': 'تغيير كلمة مرور',
 };
@@ -323,7 +326,7 @@ async function auditTab(el) {
     const describe = (r) => {
       const d = r.details || {};
       if (d.brand) return d.brand;
-      if (d.contractId) { const c = contracts.find((x) => x.id === d.contractId); return `${c?.brandName || ''} — دفعة ${Number(d.index) + 1}${'paid' in d ? (d.paid ? ' (سداد)' : ' (إلغاء سداد)') : ''}${'lateFlag' in d ? (d.lateFlag ? ' (تعثر)' : ' (إلغاء تعثر)') : ''}`; }
+      if (d.contractId) { const c = contracts.find((x) => x.id === d.contractId); return `${c?.brandName || ''} — دفعة ${Number(d.index) + 1}${d.amount ? ` (${money(d.amount)})` : ''}${d.waived || d.discount ? ` (إعفاء ${money(d.waived || 0)} · خصم ${money(d.discount || 0)})` : ''}${'paid' in d ? (d.paid ? ' (سداد)' : ' (إلغاء سداد)') : ''}${'lateFlag' in d ? (d.lateFlag ? ' (تعثر)' : ' (إلغاء تعثر)') : ''}`; }
       return d.name || d.username || '';
     };
     setHTML(el, html`<section class="card card-flush">${rows.length ? html`<div class="table-wrap"><table class="table table-cards">
@@ -333,7 +336,48 @@ async function auditTab(el) {
   } catch (err) { setHTML(el, html`<section class="card">${friendlyError(err)}</section>`); }
 }
 
-const RENDER = { brand: brandTab, notify: notifyTab, account: accountTab, data: dataTab, audit: auditTab };
+/* ---------------- التصنيفات ---------------- */
+function categoriesTab(el) {
+  const custom = customCategories();
+  setHTML(el, html`
+    <section class="card stack">
+      <header class="card-head"><h2>${icon('plus', 18)} تصنيفات خاصة</h2></header>
+      <p class="muted">أضف أي نشاط غير موجود في القائمة الأساسية، وسيظهر في نموذج العقد تحت مجموعة "${CUSTOM_GROUP}" وفي الإحصائيات.</p>
+      <form class="inline-form" data-add-cat>
+        <input class="input" name="name" placeholder="مثال: محل شاي وقهوة مختصة" maxlength="60" required>
+        <button class="btn btn-primary">${icon('plus', 16)} إضافة</button>
+      </form>
+      ${custom.length ? html`<div class="cat-list">${custom.map((c) => html`<span class="chip chip-neutral">${c}<button type="button" data-del-cat="${c}" title="حذف" aria-label="حذف ${c}">${icon('x', 13)}</button></span>`)}</div>`
+        : html`<p class="hint">${icon('info', 14)} لا توجد تصنيفات خاصة بعد.</p>`}
+    </section>
+    <section class="card stack">
+      <header class="card-head"><h2>${icon('grid', 18)} التصنيفات الأساسية</h2></header>
+      <div class="cat-groups">${APP_CONFIG.categoryGroups.map((g) => html`<div><strong>${g.group}</strong><p>${g.items.join('، ')}</p></div>`)}</div>
+    </section>`);
+
+  const save = (list) => settingsRepo.saveGeneral({ customCategories: list });
+  $('[data-add-cat]', el).addEventListener('submit', (e) => {
+    e.preventDefault();
+    const form = e.currentTarget;
+    const name = form.name.value.trim().replace(/\s+/g, ' ');
+    if (!name) return;
+    if (APP_CONFIG.categories.includes(name) || custom.includes(name)) { toast('هذا التصنيف موجود مسبقاً', 'warning'); return; }
+    withBusy(form.querySelector('button'), async () => {
+      try { await save([...custom, name]); toast('تمت إضافة التصنيف'); categoriesTab(el); }
+      catch (err) { toast(friendlyError(err), 'danger'); }
+    });
+  });
+  on(el, 'click', '[data-del-cat]', async (e, b) => {
+    const name = b.dataset.delCat;
+    const used = store.get('contracts').filter((c) => c.category === name).length;
+    const msg = used ? `التصنيف "${name}" مستخدم في ${used} عقد — ستبقى هذه العقود بنفس التصنيف لكنه لن يظهر في القائمة. متابعة؟` : `حذف التصنيف "${name}"؟`;
+    if (!(await confirmDialog({ title: 'حذف تصنيف', message: msg, confirmText: 'حذف', danger: true }))) return;
+    try { await save(custom.filter((x) => x !== name)); toast('تم حذف التصنيف'); categoriesTab(el); }
+    catch (err) { toast(friendlyError(err), 'danger'); }
+  });
+}
+
+const RENDER = { brand: brandTab, notify: notifyTab, categories: categoriesTab, account: accountTab, data: dataTab, audit: auditTab };
 
 export default {
   id: 'settings',

@@ -26,7 +26,7 @@ export function nextInstallmentCell(contract) {
   const tone = next.lateFlag || d < 0 ? 'danger' : d <= APP_CONFIG.alerts.urgentDays ? 'warning' : 'success';
   return html`
     <div class="next-inst">
-      <strong class="num">${money(next.amount)}</strong>
+      <strong class="num">${money(next.remaining)}</strong>${next.partial ? html`<span class="muted small">متبقي من ${money(next.amount)}</span>` : ''}
       <span class="muted small num">${formatDate(next.dueDate)}</span>
       <span class="chip chip-${tone}">${next.lateFlag && d >= 0 ? 'متعثرة' : relativeDays(d)}</span>
     </div>`;

@@ -80,8 +80,8 @@ export default {
       printEntitlements(list, 'تقرير الاستحقاقات الشامل');
     });
     on(el, 'click', '[data-csv]', () => {
-      const rows = data().flatMap((e) => e.items.map((i) => [e.contract.brandName, e.contract.shopNumber, centerName(e.contract.centerId), e.contract.tenantName, e.contract.tenantPhone, i.n, i.dueDate, i.amount]));
-      downloadCSV(`يسر_الاستحقاقات_${todayISO()}.csv`, ['النشاط', 'المحل', 'المركز', 'المستأجر', 'الجوال', 'رقم الدفعة', 'تاريخ الاستحقاق', 'المبلغ'], rows);
+      const rows = data().flatMap((e) => e.items.map((i) => [e.contract.brandName, e.contract.shopNumber, centerName(e.contract.centerId), e.contract.tenantName, e.contract.tenantPhone, i.n, i.dueDate, i.amount, i.paidAmount, i.waived + i.discount, i.remaining]));
+      downloadCSV(`يسر_الاستحقاقات_${todayISO()}.csv`, ['النشاط', 'المحل', 'المركز', 'المستأجر', 'الجوال', 'رقم الدفعة', 'تاريخ الاستحقاق', 'قيمة الدفعة', 'المسدد', 'الإعفاء والخصم', 'المتبقي'], rows);
     });
     on(el, 'click', '[data-details]', (e, b) => openContractDetails(b.dataset.details));
     on(el, 'click', 'tr[data-row]', (e, tr) => { if (!e.target.closest('[data-stop], a, button')) openContractDetails(tr.dataset.row); });

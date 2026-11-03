@@ -7,6 +7,8 @@ import { push, set, update, remove, get } from '../core/sdk.js';
 import { dbRef, path, db, withSecondaryAuth, usernameToEmail, callFunction } from '../core/firebase.js';
 import { createUserWithEmailAndPassword, ref } from '../core/sdk.js';
 import { store, actorName } from '../core/store.js';
+import { previewInstallment } from '../domain/installments.js';
+import { paymentRecord } from '../domain/contracts.js';
 import { USERNAME_RE, MIN_PASSWORD } from './errors.js';
 
 /* ============ سجل العمليات ============ */
@@ -81,8 +83,63 @@ export const contractsRepo = {
     if ('lateFlag' in changes) patch[`${base}/lateFlag`] = !!changes.lateFlag;
     patch[path('contracts', contractId, 'updatedBy')] = actor;
     patch[path('contracts', contractId, 'updatedAt')] = Date.now();
+    if ('paid' in changes && !changes.paid) patch[`${base}/payments`] = null; // إلغاء السداد يحذف المبالغ المسجلة
     await update(ref(db), patch);
     audit('installment.update', { contractId, index, ...changes });
+  },
+
+  /** الدفعة الحالية من المخزن (بعد التوحيد والحسابات) */
+  _inst(contractId, index) {
+    const c = store.get('contracts').find((x) => x.id === contractId);
+    const inst = c?.installments.find((i) => i._index === index);
+    if (!inst) throw new Error('installment-not-found');
+    return inst;
+  },
+
+  /** يكتب التغيير + علامة "مسددة" المحسوبة بعده في عملية واحدة */
+  async _applyInstallment(contractId, index, changes, patchExtra) {
+    const inst = this._inst(contractId, index);
+    const next = previewInstallment(inst, changes);
+    const base = path('contracts', contractId, 'installments', index);
+    const actor = actorName();
+    const patch = { ...patchExtra(base) };
+    patch[`${base}/paid`] = next.paid;
+    if (next.paid && !inst.paid) { patch[`${base}/paidAt`] = Date.now(); patch[`${base}/paidBy`] = actor; }
+    if (!next.paid) { patch[`${base}/paidAt`] = null; patch[`${base}/paidBy`] = null; }
+    patch[path('contracts', contractId, 'updatedBy')] = actor;
+    patch[path('contracts', contractId, 'updatedAt')] = Date.now();
+    await update(ref(db), patch);
+    return next;
+  },
+
+  /** تسجيل مبلغ مسدد (كامل أو جزئي) على دفعة */
+  async addPayment(contractId, index, { amount, date, method = '', note = '' }) {
+    const id = push(dbRef('contracts', contractId, 'installments', index, 'payments')).key;
+    const rec = paymentRecord({ amount, date, method, note, by: actorName(), at: Date.now() });
+    const inst = this._inst(contractId, index);
+    const next = await this._applyInstallment(contractId, index, { payments: [...inst.payments, { id, ...rec }] }, (base) => ({ [`${base}/payments/${id}`]: rec }));
+    audit('installment.payment', { contractId, index, amount: rec.amount });
+    return { id, rec, next };
+  },
+
+  async removePayment(contractId, index, paymentId) {
+    const inst = this._inst(contractId, index);
+    const removed = inst.payments.find((p) => p.id === paymentId);
+    await this._applyInstallment(contractId, index, { payments: inst.payments.filter((p) => p.id !== paymentId) }, (base) => ({ [`${base}/payments/${paymentId}`]: null }));
+    audit('installment.payment_delete', { contractId, index, amount: removed?.amount || 0 });
+  },
+
+  /** الإعفاء والخصم (للمدراء فقط) */
+  async setAdjustment(contractId, index, { waived = 0, discount = 0, adjNote = '' }) {
+    const w = Math.round((Number(waived) || 0) * 100) / 100;
+    const d = Math.round((Number(discount) || 0) * 100) / 100;
+    const note = String(adjNote || '').trim().slice(0, 300);
+    await this._applyInstallment(contractId, index, { waived: w, discount: d, adjNote: note }, (base) => ({
+      [`${base}/waived`]: w > 0 ? w : null,
+      [`${base}/discount`]: d > 0 ? d : null,
+      [`${base}/adjNote`]: note || null,
+    }));
+    audit('installment.adjust', { contractId, index, waived: w, discount: d });
   },
 };
 
