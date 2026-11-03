@@ -324,7 +324,7 @@ const statusLine = (list) => {
 };
 
 /** نافذة مطابقة العقد مع ملف عقد إيجار — تصحيح التواريخ والمبالغ دون المساس بحالات السداد */
-function openReconcile(contractId, imported) {
+export function openReconcile(contractId, imported) {
   const contract = store.get('contracts').find((c) => c.id === contractId);
   if (!contract) return;
   const res = reconcileContract(contract, imported.data);

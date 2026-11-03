@@ -14,6 +14,7 @@ import { confirmDialog, toast } from '../components/overlay.js';
 import { icon } from '../components/icons.js';
 import { openContractForm } from './contract-form.js';
 import { importEjarPdf, IMPORT_ERRORS } from '../services/pdf-import.js';
+import { openImportChooser } from './import-flow.js';
 import { openContractDetails } from './contract-details.js';
 
 const filters = { q: '', center: '', view: 'all' };
@@ -151,11 +152,7 @@ export default {
       try {
         const r = await importEjarPdf(file);
         if (!r.ok) { toast(IMPORT_ERRORS[r.reason] || 'تعذر قراءة الملف', 'warning', 5000); return; }
-        openContractForm(null, {
-          presetCenterId: filters.center,
-          prefill: { ...r.data, shopStatus: 'leased_open' },
-          importInfo: { source: r.source, warnings: r.warnings },
-        });
+        openImportChooser(r, { presetCenterId: filters.center });
       } finally { label.classList.remove('is-busy'); }
     });
     on(el, 'click', '[data-new-in]', (e, b) => openContractForm(null, { presetCenterId: b.dataset.newIn }));
