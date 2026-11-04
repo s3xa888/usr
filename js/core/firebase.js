@@ -5,7 +5,7 @@ import { firebaseConfig } from '../config/firebase.config.js';
 import { APP_CONFIG } from '../config/app.config.js';
 import {
   initializeApp, deleteApp, getAuth, setPersistence, browserLocalPersistence,
-  getDatabase, ref, loadAppCheck, loadFunctions,
+  getDatabase, ref, onValue, goOffline, goOnline, loadAppCheck, loadFunctions,
 } from './sdk.js';
 
 export const app = initializeApp(firebaseConfig);
@@ -22,6 +22,26 @@ if (APP_CONFIG.features.appCheck && APP_CONFIG.appCheckSiteKey) {
 export const auth = getAuth(app);
 await setPersistence(auth, browserLocalPersistence).catch(() => {});
 export const db = getDatabase(app);
+
+/**
+ * حارس الاتصال: إذا لم يتصل Realtime Database خلال ثوانٍ (أو انقطع ولم يرجع)،
+ * نمسح علامة فشل WebSocket ونعيد الاتصال — حتى لا تعلق المكتبة على طريقة اتصال بديلة لا تعمل.
+ */
+(() => {
+  const FLAG = 'firebase:previous_websocket_failure';
+  let timer = null;
+  const kick = () => {
+    try { localStorage.removeItem(FLAG); } catch {}
+    goOffline(db);
+    goOnline(db);
+  };
+  const arm = () => { clearTimeout(timer); timer = setTimeout(() => { kick(); arm(); }, 8000); };
+  onValue(ref(db, '.info/connected'), (snap) => {
+    if (snap.val() === true) clearTimeout(timer);
+    else arm();
+  });
+  arm();
+})();
 
 /** مسار داخل جذر البيانات v2 */
 export const path = (...parts) => [APP_CONFIG.dbRoot, ...parts].filter((p) => p !== undefined && p !== '').join('/');

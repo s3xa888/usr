@@ -34,6 +34,7 @@ let profileOff = null;
 let lastAccessKey = '';
 
 function show(which) {
+  window.__yusrShown = true;
   bootEl.hidden = true;
   authEl.hidden = which !== 'auth';
   appEl.hidden = which !== 'app';
@@ -68,12 +69,27 @@ function stopApp() {
   started = false;
 }
 
+/** يعرض شاشة الخطأ دائماً بشكل ظاهر (سابقاً كانت تُرسم داخل عنصر مخفي فتظهر شاشة بيضاء) */
+function fatal(title, detail) {
+  stopApp();
+  show('auth');
+  renderFatal(authEl, title, detail);
+}
+
+/** مهلة لأي طلب لقاعدة البيانات: بدل الانتظار للأبد نعرض رسالة واضحة */
+const DB_TIMEOUT = 12000;
+const withTimeout = (promise, ms = DB_TIMEOUT) => Promise.race([
+  promise,
+  new Promise((_, reject) => setTimeout(() => reject(new Error('timeout')), ms)),
+]);
+const NET_MSG = 'لم نتمكن من الاتصال بقاعدة البيانات. تحقق من الإنترنت ثم اضغط إعادة المحاولة.';
+
 const accessKey = (p) => `${p.role}|${!!p.permissions?.add}|${!!p.permissions?.pay}`;
 
 async function onProfile(user, profile) {
   if (!profile) {
     if (isCreatingOwner()) return; // إنشاء حساب المالك جارٍ — ننتظر اكتماله
-    const ownerUid = await getOwnerUid().catch(() => null);
+    const ownerUid = await withTimeout(getOwnerUid()).catch(() => null);
     if (ownerUid === user.uid) { await ensureOwnerProfile(user.uid, emailToUsername(user.email), ''); return; }
     if (!ownerUid) return; // إنشاء حساب المالك جارٍ الآن — ننتظر اكتماله
     stopApp(); show('auth');
@@ -108,23 +124,32 @@ async function boot() {
     if (!user) {
       stopApp();
       store.reset();
-      show('auth');
+      // لا نُظهر شاشة الدخول فارغة أثناء الانتظار — تبقى شاشة التحميل حتى يصل الرد
       try {
-        if (await ownerExists()) renderLogin(authEl);
+        const exists = await withTimeout(ownerExists());
+        show('auth');
+        if (exists) renderLogin(authEl);
         else renderSetup(authEl);
       } catch (err) {
         console.error(err);
-        renderFatal(authEl, 'تعذر الاتصال بقاعدة البيانات', 'تأكد من الإنترنت، ومن نشر قواعد الأمان database.rules.json (راجع README).');
+        fatal('تعذر الاتصال بقاعدة البيانات', err?.message === 'timeout' ? NET_MSG : 'تأكد من الإنترنت، ومن نشر قواعد الأمان database.rules.json (راجع README).');
       }
       return;
     }
     store.set('authUser', user);
-    profileOff = listenProfile(user.uid, (p) => onProfile(user, p).catch((err) => { console.error(err); renderFatal(authEl, 'تعذر تحميل الحساب', String(err.message || err)); }));
+    let profileArrived = false;
+    const profileTimer = setTimeout(() => { if (!profileArrived) fatal('تعذر تحميل الحساب', NET_MSG); }, DB_TIMEOUT);
+    profileOff = listenProfile(user.uid, (p) => {
+      profileArrived = true;
+      clearTimeout(profileTimer);
+      onProfile(user, p).catch((err) => { console.error(err); fatal('تعذر تحميل الحساب', String(err.message || err)); });
+    });
+    const off = profileOff;
+    profileOff = () => { clearTimeout(profileTimer); off?.(); };
   });
 }
 
 boot().catch((err) => {
   console.error(err);
-  show('auth');
-  renderFatal(authEl, 'تعذر تشغيل المنصة', String(err.message || err));
+  fatal('تعذر تشغيل المنصة', String(err.message || err));
 });
